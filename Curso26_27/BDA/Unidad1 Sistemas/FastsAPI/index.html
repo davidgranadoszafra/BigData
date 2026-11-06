@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>REST con FastAPI — de cero a probarlo tú mismo - Slides</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/dracula.min.css">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap');
+
+    :root {
+      --neon-blue: #0ea5e9;
+      --neon-green: #10b981;
+      --bg-dark: #0f172a;
+      --text-main: #cbd5e1;
+
+      --bg-elevated:   #1c1812;
+      --bg-card:       #221d16;
+      --border:        #2a2418;
+      --text-primary:  #f0e8d4;
+      --text-secondary:#b8b09c;
+      --text-muted:    #7a715a;
+      --orange:        #f97316;
+      --orange-dim:    #2a1a0a;
+      --green:         #4ade80;
+      --green-dim:     #0d2818;
+      --red:           #f87171;
+      --red-dim:       #2a1010;
+      --cyan:          #38bdf8;
+      --cyan-dim:      #0c2540;
+      --purple:        #c2845a;
+      --purple-dim:    #1f1408;
+      --accent:        #38bdf8;
+      --surface:       #1c1812;
+      --font-body:     'Inter', system-ui, sans-serif;
+      --font-mono:     'JetBrains Mono', ui-monospace, monospace;
+      --radius:        8px;
+    }
+
+    body { background-color: var(--bg-dark); }
+    .reveal { font-family: 'Inter', sans-serif; color: var(--text-main); }
+
+    .reveal .slides section {
+      max-height: 800px;
+      overflow-y: auto;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3 {
+      text-transform: none;
+      color: #f8fafc;
+      font-weight: 800;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    .reveal h1 { color: var(--neon-blue); font-size: 2.2em; text-align: center; }
+    .reveal h2 { font-size: 1.6em; border-bottom: 2px solid #334155; padding-bottom: 10px; }
+    .reveal h3 { font-size: 1.3em; color: var(--neon-green); }
+
+    .reveal p {
+      font-size: 28px;
+      line-height: 1.5;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .reveal strong { color: inherit; font-weight: bold; }
+
+    .reveal pre {
+      width: 100%;
+      margin: 20px 0;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+    }
+    .reveal pre code {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 16px;
+      line-height: 1.35;
+      padding: 24px;
+      max-height: 620px;
+      overflow-y: auto;
+    }
+
+    .reveal .code-block {
+      background: rgba(255, 215, 150, 0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    .reveal .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+    .reveal .code-lang {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--cyan);
+      font-weight: 500;
+    }
+    .reveal .copy-btn {
+      background: transparent;
+      border: 1px solid #3a3122;
+      color: var(--text-muted);
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: var(--font-body);
+    }
+    .reveal .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .reveal .code-block pre { margin: 0; border: none; box-shadow: none; border-radius: 0; }
+
+    .slide-concept, .slide-code, .slide-summary, .slide-definition {
+      text-align: left;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .reveal .widget-container { padding: 0; box-shadow: none; border: none; background: transparent; }
+    .reveal .concept-body { display: flex; flex-direction: column; gap: 15px; }
+
+    .reveal .slide-summary li { font-size: 28px !important; margin-bottom: 20px !important; line-height: 1.4 !important; }
+    .reveal .slide-summary h4 { font-size: 32px !important; margin-bottom: 24px !important; }
+    .reveal .slide-summary div { padding: 40px !important; }
+    .reveal .slide-concept h3 { font-size: 40px !important; }
+    .reveal .info-box-text { font-size: 28px !important; }
+    .reveal .widget-cards h4 { font-size: 28px !important; }
+    .reveal .widget-cards p { font-size: 22px !important; }
+
+    .reveal .quiz-question p { font-size: 30px; }
+    .reveal .quiz-question button { font-size: 22px !important; padding: 16px 20px !important; }
+    .reveal .quiz-explanation { font-size: 22px !important; }
+    .reveal .quiz-explanation.hidden { display: none; }
+    .reveal .quiz-options { list-style: none; padding: 0; margin-top: 20px; }
+    .reveal .quiz-options li {
+      font-size: 24px;
+      background: #1e293b;
+      padding: 15px 20px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+
+    .reveal .info-box {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 20px 24px;
+      border-radius: var(--radius);
+      margin: 24px 0;
+      border: 1px solid transparent;
+      color: var(--text-primary);
+    }
+    .reveal .info-box p,
+    .reveal .info-box li,
+    .reveal .info-box span:not(.info-box-icon):not(.info-box-label) { color: inherit; }
+    .reveal .info-box.info    { background: var(--cyan-dim);   border-color: var(--cyan);   }
+    .reveal .info-box.warning,
+    .reveal .info-box.warn    { background: var(--orange-dim); border-color: var(--orange); }
+    .reveal .info-box.danger,
+    .reveal .info-box.fail    { background: var(--red-dim);    border-color: var(--red);    }
+    .reveal .info-box.success,
+    .reveal .info-box.tip     { background: var(--green-dim);  border-color: var(--green);  }
+    .reveal .info-box-icon,
+    .reveal .info-box-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .reveal .info-box.info    .info-box-icon,
+    .reveal .info-box.info    .info-box-label { background: var(--cyan-dim);   color: var(--cyan);   }
+    .reveal .info-box.warning .info-box-icon,
+    .reveal .info-box.warning .info-box-label,
+    .reveal .info-box.warn    .info-box-icon,
+    .reveal .info-box.warn    .info-box-label { background: var(--orange-dim); color: var(--orange); }
+    .reveal .info-box.danger  .info-box-icon,
+    .reveal .info-box.danger  .info-box-label,
+    .reveal .info-box.fail    .info-box-icon,
+    .reveal .info-box.fail    .info-box-label { background: var(--red-dim);    color: var(--red);    }
+    .reveal .info-box.success .info-box-icon,
+    .reveal .info-box.success .info-box-label { background: var(--green-dim);  color: var(--green);  }
+    .reveal .info-box-text { font-size: 22px; line-height: 1.5; color: var(--text-primary); }
+
+    .reveal .slide-example ol { font-size: 28px; line-height: 1.5; }
+    .reveal .slide-example li { margin-bottom: 16px; }
+    .reveal .slide-example li span { font-size: 18px !important; }
+
+    .reveal .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 20px 0; }
+    .reveal .concept-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; border-top: 4px solid transparent; }
+    .reveal .concept-card h3 { font-size: 22px; margin: 8px 0 10px; }
+    .reveal .concept-card p { font-size: 16px; color: var(--text-secondary); margin: 0; }
+    .reveal .concept-icon { font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; display: inline-block; padding: 3px 10px; border-radius: 4px; background: var(--bg-elevated); color: var(--text-muted); }
+    .reveal .concept-card.orange { border-top-color: var(--orange); } .reveal .concept-card.orange h4 { color: var(--orange); }
+    .reveal .concept-card.cyan   { border-top-color: var(--cyan);   } .reveal .concept-card.cyan   h4 { color: var(--cyan);   }
+    .reveal .concept-card.green  { border-top-color: var(--green);  } .reveal .concept-card.green  h4 { color: var(--green);  }
+    .reveal .concept-card.purple { border-top-color: var(--purple); } .reveal .concept-card.purple h4 { color: var(--purple); }
+    .reveal .concept-card.red    { border-top-color: var(--red);    } .reveal .concept-card.red    h4 { color: var(--red);    }
+
+    /* Tabla comparativa (Flake vs Flask/FastAPI) */
+    .reveal table.cmp { width:100%; border-collapse:collapse; font-size:20px; }
+    .reveal table.cmp th, .reveal table.cmp td { border:1px solid var(--border); padding:10px 14px; text-align:left; }
+    .reveal table.cmp th { background:var(--bg-card); color:var(--cyan); }
+    .reveal table.cmp td { color:var(--text-secondary); }
+    .reveal table.cmp td.yes { color:var(--green); font-weight:700; }
+    .reveal table.cmp td.no  { color:var(--red); font-weight:700; }
+
+    .reveal .mermaid { background: transparent; display: flex; justify-content: center; margin-top: 20px; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+<section class="slide-deck_cover">
+    <div class="widget-deck-cover" style="height:100%; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; background-color:#0f172a; color:#ffffff; padding:60px; text-align:left; box-sizing:border-box;">
+        <h1 style="font-size:64px; color:#ffffff; margin:0 0 20px 0; line-height:1.2; font-weight:bold; max-width:100%; min-width:0; overflow-wrap:break-word;">REST con FastAPI</h1>
+        <h3 style="font-size:36px; color:#ffffff; margin:0 0 10px 0; max-width:100%; min-width:0; overflow-wrap:break-word;">De cero a probarlo tú mismo — curl, REST Client, Swagger y Pydantic</h3>
+    </div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 1 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">🌐</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">1</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Qué es REST, de verdad</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;"><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">cliente / servidor</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">verbos HTTP</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">códigos de estado</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">statelessness</li></ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Cliente, servidor, y un "recurso"</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Cuando abres una web o una app, tu ordenador (el <strong>cliente</strong>) le pide cosas a otro ordenador (el <strong>servidor</strong>) a través de la red. En REST, cada cosa que puedes pedir se llama un <strong>recurso</strong> — un usuario, un pedido, una foto — y cada recurso tiene una dirección única: una URL. <code>/usuarios/5</code> no es "una función que se ejecuta", es literalmente la dirección del usuario número 5.</p>
+<p style="margin:0 0 14px 0;line-height:1.7">REST (Representational State Transfer) es solo un conjunto de convenciones sobre cómo pedir y modificar esos recursos usando el protocolo HTTP — el mismo que usa tu navegador para cargar cualquier página. No es magia ni un lenguaje nuevo: es un acuerdo sobre cómo hablarse.</p></div>
+</div>
+</section>
+
+<section class="slide-example">
+<div style="margin-bottom:32px">
+  <h3>Una petición HTTP real, sin ningún framework de por medio</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">http</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-bash">GET /usuarios/5 HTTP/1.1
+Host: api.eoi.com
+Accept: application/json
+
+--- El servidor responde ---
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  &quot;id&quot;: 5,
+  &quot;nombre&quot;: &quot;Ana&quot;,
+  &quot;email&quot;: &quot;ana@eoi.com&quot;
+}</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Esto es TODO lo que pasa por la red. FastAPI, mas adelante, solo te ahorra escribir esto a mano.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Los verbos HTTP: qué quiere hacer el cliente</h3>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-card cyan"><span class="concept-icon">GET</span><h3>Leer</h3><p>Pide un recurso. No cambia nada en el servidor. Puedes repetirlo mil veces sin efecto secundario.</p></div>
+    <div class="concept-card green"><span class="concept-icon">POST</span><h3>Crear</h3><p>Crea un recurso nuevo. Cada vez que lo repites, crea otro más (no es idempotente).</p></div>
+    <div class="concept-card orange"><span class="concept-icon">PUT</span><h3>Reemplazar</h3><p>Sustituye el recurso entero por lo que envías. Repetirlo dos veces da el mismo resultado.</p></div>
+    <div class="concept-card purple"><span class="concept-icon">PATCH</span><h3>Modificar</h3><p>Cambia solo los campos que envías, deja el resto del recurso tal cual.</p></div>
+    <div class="concept-card red"><span class="concept-icon">DELETE</span><h3>Borrar</h3><p>Elimina el recurso. Repetirlo no hace nada nuevo — ya no está.</p></div>
+  </div>
+</div>
+</section>
+
+<section class="slide-example">
+<div style="margin-bottom:32px">
+  <h3>Petición y respuesta, verbo a verbo</h3>
+  <div class="mermaid">
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    C->>S: GET /usuarios/5
+    S-->>C: 200 OK + datos de Ana
+    C->>S: POST /usuarios (nombre: Luis)
+    S-->>C: 201 Created + nuevo usuario
+    C->>S: PATCH /usuarios/5 (email nuevo)
+    S-->>C: 200 OK + usuario actualizado
+    C->>S: DELETE /usuarios/5
+    S-->>C: 204 No Content
+  </div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Códigos de estado: la respuesta antes de leer el cuerpo</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Antes de mirar los datos que devuelve el servidor, el código de 3 cifras ya te dice qué pasó. No hace falta memorizarlos todos — con el primer dígito te orientas: <strong>2xx</strong> = todo salió bien, <strong>4xx</strong> = el cliente hizo algo mal (pidió algo que no existe, mandó datos inválidos), <strong>5xx</strong> = el servidor se rompió por su cuenta.</p></div>
+</div>
+<div class="table-wrapper" style="margin-top:20px">
+<table class="cmp">
+<thead><tr><th>Código</th><th>Significa</th><th>Cuándo lo verás</th></tr></thead>
+<tbody>
+<tr><td>200 OK</td><td>Éxito genérico</td><td>GET, PUT, PATCH que salieron bien</td></tr>
+<tr><td>201 Created</td><td>Se creó el recurso</td><td>Un POST que sale bien</td></tr>
+<tr><td>204 No Content</td><td>Éxito, sin cuerpo que devolver</td><td>Un DELETE que sale bien</td></tr>
+<tr><td>400 Bad Request</td><td>Datos mal formados</td><td>JSON roto, campo con tipo incorrecto</td></tr>
+<tr><td>401 / 403</td><td>Sin autenticar / sin permiso</td><td>Falta o no vale el token</td></tr>
+<tr><td>404 Not Found</td><td>Ese recurso no existe</td><td>/usuarios/9999 si no hay usuario 9999</td></tr>
+<tr><td>422 Unprocessable</td><td>Validación falló</td><td>El que más verás con FastAPI + Pydantic</td></tr>
+<tr><td>500 Internal Server Error</td><td>El servidor petó</td><td>Un bug tuyo sin capturar</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box info" style="margin-bottom:24px">
+  <div class="info-box-icon">INFO</div>
+  <div class="info-box-text"><strong>Statelessness — el servidor no se acuerda de ti</strong> Cada petición HTTP se basta a sí misma: el servidor no recuerda tu petición anterior. Si necesitas que "sepa quién eres" en la siguiente, tienes que mandárselo otra vez en cada petición (normalmente un token en la cabecera <code>Authorization</code>). Esto es lo que hace que un servidor REST pueda repartir tus peticiones entre 10 máquinas distintas sin que a ti te afecte — ninguna "recuerda" nada, así que da igual cuál te atienda.</div>
+</div>
+</section>
+
+<section class="slide-summary">
+<div style="background:var(--bg-elevated);border-left:3px solid var(--cyan);border-radius:var(--radius);padding:16px 20px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);margin:0 0 12px 0">En resumen</h4>
+  <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px"><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>REST es un conjunto de convenciones sobre HTTP, no un lenguaje ni un framework.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Cada recurso tiene una URL propia; el verbo (GET/POST/PUT/PATCH/DELETE) dice qué quieres hacer con él.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>El código de estado (2xx/4xx/5xx) te orienta antes de leer el cuerpo de la respuesta.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>El servidor es stateless: no recuerda tu petición anterior, se lo tienes que decir siempre.</span></li></ul>
+</div>
+</section>
+
+<section class="slide-quiz">
+<div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin:0 0 16px 0">Autoevaluación (1/1)</h4>
+  <div class="quiz-question" style="margin-bottom:24px"><p><strong>Q1.</strong> Llamas dos veces seguidas a <code>DELETE /usuarios/5</code>. ¿Qué pasa la segunda vez?</p><ul style="list-style:none;padding:0;margin-top:10px"><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Se borra un segundo usuario 5 fantasma.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="true" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Normalmente 404 — el usuario 5 ya no existe, DELETE es idempotente.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">El servidor recuerda que ya lo borraste y lo restaura.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Siempre 500, porque no se puede borrar dos veces lo mismo.</button></li></ul><p class="quiz-explanation hidden" style="margin-top:8px;padding:10px;background:var(--bg-elevated);border-radius:var(--radius);font-size:13px;color:var(--text-secondary)">DELETE es idempotente: repetirlo no cambia el resultado. Como el recurso ya no existe, lo normal es un 404.</p></div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 2 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">⚡</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">2</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Tu primera API con FastAPI</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;"><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">instalación y uvicorn</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">path params</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">query params</li></ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">FastAPI escribe el servidor, uvicorn lo hace correr</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7"><strong>FastAPI</strong> es la librería con la que describes tus endpoints en Python. <strong>uvicorn</strong> es el programa que de verdad escucha en un puerto de red y le pasa cada petición a tu código FastAPI — son dos cosas distintas que se usan juntas casi siempre. Instalas ambas con un solo comando.</p></div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Hello world — 6 líneas, servidor real</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">bash + python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-bash">$ pip install fastapi uvicorn</code></pre>
+  </div>
+  <div class="code-block" style="margin-top:12px">
+  <pre><code class="language-python"># main.py
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get(&quot;/&quot;)
+def leer_raiz():
+    return {&quot;mensaje&quot;: &quot;Hola desde FastAPI&quot;}</code></pre>
+  </div>
+  <div class="code-block" style="margin-top:12px">
+  <pre><code class="language-bash"># Se ejecuta así, desde la carpeta de main.py:
+$ uvicorn main:app --reload
+# main:app -> fichero main.py, variable &quot;app&quot; dentro
+# --reload -> reinicia solo al guardar cambios (solo en desarrollo)
+# Ahora http://127.0.0.1:8000/ ya responde de verdad</code></pre>
+  </div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Path params: parte de la URL como variable</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Cuando un trozo de la URL identifica UN recurso concreto (¿cuál usuario? el 5), va como <em>path param</em> — entre llaves en la ruta, y como parámetro con tipo anotado en la función. FastAPI lo valida solo: si alguien pide <code>/usuarios/hola</code> en vez de un número, responde 422 sin que tú escribas ni un <code>if</code>.</p></div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Path param con validación de tipo automática</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">@app.get(&quot;/usuarios/{usuario_id}&quot;)
+def leer_usuario(usuario_id: int):
+    # usuario_id ya LLEGA como int, no como string
+    return {&quot;id&quot;: usuario_id, &quot;nombre&quot;: &quot;Ana&quot;}
+
+# GET /usuarios/5      -&gt; 200 OK, usuario_id = 5 (int)
+# GET /usuarios/hola   -&gt; 422 Unprocessable Entity
+#   {&quot;detail&quot;: [{&quot;msg&quot;: &quot;Input should be a valid integer&quot;, ...}]}</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Nadie escribió ese 422 a mano — sale solo de anotar &quot;usuario_id: int&quot;.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Query params: filtros y opciones, tras el "?"</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Cuando NO identifican un recurso concreto sino que ajustan la petición (buscar, paginar, filtrar), van como <em>query params</em>: cualquier parámetro de la función que no aparezca entre llaves en la ruta, FastAPI lo busca automáticamente después del <code>?</code> en la URL.</p></div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Query param opcional, con valor por defecto</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">@app.get(&quot;/usuarios&quot;)
+def listar_usuarios(activos: bool = True, limite: int = 10):
+    # activos y limite: NO estan en la ruta -&gt; son query params
+    return {&quot;activos&quot;: activos, &quot;limite&quot;: limite}
+
+# GET /usuarios                      -&gt; activos=True, limite=10
+# GET /usuarios?activos=false        -&gt; activos=False, limite=10
+# GET /usuarios?activos=false&amp;limite=5</code></pre>
+</div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box tip" style="margin-bottom:24px">
+  <div class="info-box-icon">KEY</div>
+  <div class="info-box-text"><strong>Regla rápida para no dudar</strong> ¿Identifica un recurso concreto? → path param (<code>/usuarios/5</code>). ¿Ajusta cómo se busca/filtra/pagina? → query param (<code>/usuarios?activos=true</code>). Si dudas, pregúntate: "¿esto podría faltar y la petición seguiría teniendo sentido?" — si sí, casi siempre es query param.</div>
+</div>
+</section>
+
+<section class="slide-summary">
+<div style="background:var(--bg-elevated);border-left:3px solid var(--cyan);border-radius:var(--radius);padding:16px 20px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);margin:0 0 12px 0">En resumen</h4>
+  <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px"><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>FastAPI describe los endpoints; uvicorn es quien de verdad escucha en la red.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Los path params van entre llaves en la ruta e identifican un recurso concreto.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Los query params van tras el &quot;?&quot; y ajustan/filtran la petición.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Anotar el tipo (int, bool...) activa validación automática con 422 si no encaja.</span></li></ul>
+</div>
+</section>
+
+<section class="slide-quiz">
+<div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin:0 0 16px 0">Autoevaluación (1/1)</h4>
+  <div class="quiz-question" style="margin-bottom:24px"><p><strong>Q1.</strong> Quieres un endpoint que busque usuarios por texto libre, tipo <code>/usuarios?buscar=ana</code>. ¿Cómo declaras <code>buscar</code> en la función?</p><ul style="list-style:none;padding:0;margin-top:10px"><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Como parte de la ruta: /usuarios/{buscar}</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="true" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Como parámetro normal de la función, sin llaves en la ruta: def listar_usuarios(buscar: str = &quot;&quot;)</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Hay que registrarlo aparte con @app.query(&quot;buscar&quot;)</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">No se puede buscar por texto libre en REST.</button></li></ul><p class="quiz-explanation hidden" style="margin-top:8px;padding:10px;background:var(--bg-elevated);border-radius:var(--radius);font-size:13px;color:var(--text-secondary)">Cualquier parámetro de la función que no esté entre llaves en la ruta, FastAPI lo trata automáticamente como query param.</p></div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 3 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">🛡️</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">3</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Pydantic: validación que llega gratis</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;"><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">modelos como contrato</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">el 422 con detalle</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">response_model</li></ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">El problema: el JSON que llega no promete nada</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Cuando alguien te manda un <code>POST</code> con un cuerpo JSON, ese JSON puede tener cualquier forma — un campo que falta, un número como texto, un campo de más. Sin nada que lo controle, tendrías que escribir a mano un montón de <code>if</code> comprobando cada campo antes de confiar en los datos. <strong>Pydantic</strong> es la librería que hace eso por ti: defines la forma que ESPERAS con una clase normal de Python, y Pydantic la usa para validar y convertir automáticamente.</p></div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Un modelo Pydantic como cuerpo de un POST</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class UsuarioNuevo(BaseModel):
+    nombre: str
+    email: str
+    edad: int
+
+@app.post(&quot;/usuarios&quot;)
+def crear_usuario(usuario: UsuarioNuevo):
+    # Si llegamos aqui, &quot;usuario&quot; YA es valido:
+    # nombre es str, email es str, edad es int. Garantizado.
+    return {&quot;mensaje&quot;: f&quot;Usuario {usuario.nombre} creado&quot;}</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">No hay ni un solo &quot;if&quot; de validacion en esta funcion. Todo pasa antes de entrar.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-example">
+<div style="margin-bottom:32px">
+  <h3>Qué pasa cuando el JSON no encaja</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">http</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-bash"># El cliente manda esto (falta &quot;email&quot;, &quot;edad&quot; es texto):
+POST /usuarios
+{&quot;nombre&quot;: &quot;Ana&quot;, &quot;edad&quot;: &quot;veinte&quot;}
+
+# FastAPI responde solo, sin que tu escribas nada:
+HTTP/1.1 422 Unprocessable Entity
+{
+  &quot;detail&quot;: [
+    {&quot;loc&quot;: [&quot;body&quot;, &quot;email&quot;], &quot;msg&quot;: &quot;Field required&quot;},
+    {&quot;loc&quot;: [&quot;body&quot;, &quot;edad&quot;], &quot;msg&quot;: &quot;Input should be a valid integer&quot;}
+  ]
+}</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Dos errores, cada uno con el campo exacto y por que fallo. Esto es lo que te ahorras escribir a mano.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">También controla lo que SALE: response_model</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Un modelo Pydantic no es solo para lo que entra — también puedes usarlo para definir exactamente qué forma tiene lo que devuelves, con <code>response_model</code>. Si tu función devuelve de más (un campo interno, una contraseña hasheada), FastAPI lo filtra automáticamente y solo deja pasar lo que el modelo de salida declara.</p></div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Modelo de entrada distinto del de salida</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">class UsuarioNuevo(BaseModel):
+    nombre: str
+    email: str
+    password: str          # entra, pero NUNCA debe salir
+
+class UsuarioPublico(BaseModel):
+    id: int
+    nombre: str
+    email: str              # sin password
+
+@app.post(&quot;/usuarios&quot;, response_model=UsuarioPublico)
+def crear_usuario(usuario: UsuarioNuevo):
+    nuevo_id = 42
+    # Aunque devolvieramos el objeto completo con password,
+    # response_model filtra y solo deja pasar lo declarado en UsuarioPublico
+    return {&quot;id&quot;: nuevo_id, **usuario.model_dump()}</code></pre>
+</div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box warning" style="margin-bottom:24px">
+  <div class="info-box-icon">WARN</div>
+  <div class="info-box-text"><strong>422 vs 400</strong> Con FastAPI casi siempre verás 422, no 400, cuando algo falla en la validación de datos. 400 es un error genérico "petición mal formada"; 422 significa específicamente "la petición estaba bien formada pero los datos no pasan la validación del modelo". Es una distinción de FastAPI/Pydantic, no de HTTP en general.</div>
+</div>
+</section>
+
+<section class="slide-summary">
+<div style="background:var(--bg-elevated);border-left:3px solid var(--cyan);border-radius:var(--radius);padding:16px 20px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);margin:0 0 12px 0">En resumen</h4>
+  <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px"><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Un modelo Pydantic (BaseModel) es el contrato de qué forma tienen tus datos.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Si el JSON no encaja con el modelo, FastAPI responde 422 con el detalle exacto, sin que escribas nada.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>response_model controla también lo que sale, y puede ocultar campos internos.</span></li></ul>
+</div>
+</section>
+
+<section class="slide-quiz">
+<div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin:0 0 16px 0">Autoevaluación (1/1)</h4>
+  <div class="quiz-question" style="margin-bottom:24px"><p><strong>Q1.</strong> ¿Por qué usar response_model aunque tu función ya devuelva "casi" lo correcto?</p><ul style="list-style:none;padding:0;margin-top:10px"><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Es obligatorio en FastAPI, sin eso no arranca el servidor.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="true" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Filtra automáticamente campos sensibles o internos que no deberían salir nunca, aunque tu función los incluya por error.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Hace que la API responda más rápido.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Es solo cosmético, no cambia el JSON real.</button></li></ul><p class="quiz-explanation hidden" style="margin-top:8px;padding:10px;background:var(--bg-elevated);border-radius:var(--radius);font-size:13px;color:var(--text-secondary)">response_model es una red de seguridad: filtra la salida real al esquema declarado, evitando fugas de datos por error humano.</p></div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 4 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">🧪</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">4</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Probando sin escribir código: curl y REST Client</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;"><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">curl paso a paso</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">extensión REST Client de VSCode</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">ficheros .http versionables</li></ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Por qué probar a mano antes de escribir tests</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Mientras estás construyendo un endpoint, quieres feedback inmediato: ¿responde lo que espero? Escribir un test automático cada vez que cambias una línea es demasiado lento en ese momento. La solución no es "abrir el navegador y hacer clicks" — para una API que no es una web, se prueba con una herramienta que hable HTTP directamente: <code>curl</code> desde terminal, o el plugin REST Client si trabajas en VSCode.</p></div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">curl: GET, POST, y con query params</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-bash"># GET simple
+$ curl http://127.0.0.1:8000/usuarios/5
+
+# GET con query params
+$ curl &quot;http://127.0.0.1:8000/usuarios?activos=true&amp;limite=5&quot;
+
+# POST con cuerpo JSON
+$ curl -X POST http://127.0.0.1:8000/usuarios \
+    -H &quot;Content-Type: application/json&quot; \
+    -d &#x27;{&quot;nombre&quot;: &quot;Ana&quot;, &quot;email&quot;: &quot;ana@eoi.com&quot;, &quot;edad&quot;: 20}&#x27;
+
+# Con cabecera de autenticacion (token de ejemplo)
+$ curl http://127.0.0.1:8000/perfil \
+    -H &quot;Authorization: Bearer eyJhbGciOi...&quot;</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">-X indica el verbo, -H añade cabeceras, -d el cuerpo. Con GET (por defecto) no hace falta -X.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">REST Client: probar la API sin salir de VSCode</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Es una extensión de VSCode (busca <code>REST Client</code>, de Huachao Mao, id <code>humao.rest-client</code>). Escribes tus peticiones en un fichero de texto normal con extensión <code>.http</code>, y encima de cada una aparece un enlace "Send Request" — lo clicas y la respuesta se abre al lado, con status code y JSON formateado. Nada que instalar aparte de la extensión, nada que memorizar de sintaxis curl.</p></div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">peticiones.http — varias peticiones en un solo fichero</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">http</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-bash">@baseUrl = http://127.0.0.1:8000
+
+### Listar usuarios activos
+GET {{baseUrl}}/usuarios?activos=true
+
+### Ver un usuario concreto
+GET {{baseUrl}}/usuarios/5
+
+### Crear un usuario nuevo
+POST {{baseUrl}}/usuarios
+Content-Type: application/json
+
+{
+  &quot;nombre&quot;: &quot;Ana&quot;,
+  &quot;email&quot;: &quot;ana@eoi.com&quot;,
+  &quot;edad&quot;: 20
+}
+
+### Borrar un usuario
+DELETE {{baseUrl}}/usuarios/5</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Cada bloque separado por &quot;###&quot; es una petición independiente con su propio botón &quot;Send Request&quot; en VSCode. &quot;@baseUrl&quot; es una variable reutilizable.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box tip" style="margin-bottom:24px">
+  <div class="info-box-icon">KEY</div>
+  <div class="info-box-text"><strong>La ventaja real del .http</strong> curl es perfecto para una comprobación rápida y suelta. Un fichero .http se guarda en el repositorio junto al código, queda versionado en git, y cualquiera del equipo lo abre y prueba la misma petición exacta sin tener que reconstruir el comando curl de memoria cada vez. Muchos proyectos guardan un <code>peticiones.http</code> junto al README, como documentación viva de ejemplo.</div>
+</div>
+</section>
+
+<section class="slide-summary">
+<div style="background:var(--bg-elevated);border-left:3px solid var(--cyan);border-radius:var(--radius);padding:16px 20px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);margin:0 0 12px 0">En resumen</h4>
+  <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px"><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>curl -X, -H y -d son suficientes para probar cualquier verbo desde terminal.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>REST Client (VSCode) permite probar con un clic desde un fichero .http normal.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Los ficheros .http se versionan en git — documentación viva y reproducible.</span></li></ul>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 5 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">📘</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">5</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Documentación que se genera sola</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;"><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">/docs — Swagger UI</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">/redoc</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">de dónde sale: openapi.json</li></ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Dos documentaciones interactivas, sin escribir una línea</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Arranca cualquier API de FastAPI y visita <code>/docs</code> en el navegador: verás cada endpoint, cada parámetro, cada modelo de entrada/salida, y un botón <strong>"Try it out"</strong> para probarlo directamente ahí, sin curl ni REST Client. Es Swagger UI. <code>/redoc</code> muestra lo mismo con un formato de lectura distinto, más pensado para consultar que para probar.</p></div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">De dónde sale exactamente: tu código ES la documentación</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Nadie escribe /docs a mano. FastAPI lee tus type hints y tus modelos Pydantic, y con eso construye automáticamente un documento llamado <strong>schema OpenAPI</strong> (disponible en crudo en <code>/openapi.json</code>). Swagger UI y ReDoc son solo visores bonitos de ESE documento. Si cambias un tipo en tu código, la documentación cambia sola en el siguiente arranque — no hay forma de que se desincronice, porque no la escribiste dos veces.</p></div>
+</div>
+</section>
+
+<section class="slide-example">
+<div style="margin-bottom:32px">
+  <h3>El endpoint de usuarios, visto desde openapi.json</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">json</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">// Fragmento real de /openapi.json para POST /usuarios
+{
+  &quot;paths&quot;: {
+    &quot;/usuarios&quot;: {
+      &quot;post&quot;: {
+        &quot;requestBody&quot;: {
+          &quot;content&quot;: {&quot;application/json&quot;: {
+            &quot;schema&quot;: {&quot;$ref&quot;: &quot;#/components/schemas/UsuarioNuevo&quot;}
+          }}
+        },
+        &quot;responses&quot;: {&quot;200&quot;: {&quot;description&quot;: &quot;Successful Response&quot;}}
+      }
+    }
+  },
+  &quot;components&quot;: {&quot;schemas&quot;: {&quot;UsuarioNuevo&quot;: {
+    &quot;properties&quot;: {
+      &quot;nombre&quot;: {&quot;type&quot;: &quot;string&quot;},
+      &quot;email&quot;: {&quot;type&quot;: &quot;string&quot;},
+      &quot;edad&quot;: {&quot;type&quot;: &quot;integer&quot;}
+    },
+    &quot;required&quot;: [&quot;nombre&quot;, &quot;email&quot;, &quot;edad&quot;]
+  }}}
+}</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Esto es literalmente tu clase &quot;UsuarioNuevo(BaseModel)&quot; traducida a JSON. Swagger UI solo lo pinta bonito.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box info" style="margin-bottom:24px">
+  <div class="info-box-icon">INFO</div>
+  <div class="info-box-text"><strong>Para qué sirve esto en la práctica</strong> Si trabajas con un equipo de frontend, o compartes tu API con otro equipo, /docs es la referencia — no necesitas mandar un Word explicando los endpoints. Y con "Try it out" pueden probar la API real ahí mismo antes de escribir ni una línea de código cliente.</div>
+</div>
+</section>
+
+<section class="slide-quiz">
+<div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin:0 0 16px 0">Autoevaluación (1/1)</h4>
+  <div class="quiz-question" style="margin-bottom:24px"><p><strong>Q1.</strong> Cambias un campo de tu modelo Pydantic de <code>str</code> a <code>int</code>. ¿Qué tienes que hacer para que /docs lo refleje?</p><ul style="list-style:none;padding:0;margin-top:10px"><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Editar manualmente el fichero de Swagger.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Regenerar /openapi.json a mano con un comando aparte.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="true" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Nada — al reiniciar el servidor, /docs sale del código, se actualiza sola.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Instalar un plugin adicional de documentación.</button></li></ul><p class="quiz-explanation hidden" style="margin-top:8px;padding:10px;background:var(--bg-elevated);border-radius:var(--radius);font-size:13px;color:var(--text-secondary)">La documentación se deriva del código en cada arranque — nunca se puede desincronizar porque nunca se escribió aparte.</p></div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 6 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">⚖️</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">6</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">FastAPI vs Flask: por qué es una evolución</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;"><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">el mismo endpoint, dos formas</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">WSGI vs ASGI</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">Depends()</li></ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Flask (2010) y FastAPI (2018): contextos distintos</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Flask es anterior a que Python tuviera <code>async</code>/<code>await</code> maduro y a que los type hints fueran algo habitual. Es minimalista a propósito: te da el enrutado y poco más, tú añades el resto con extensiones. FastAPI nació después, diseñado desde cero para aprovechar type hints (validación y docs gratis) y async nativo (más peticiones simultáneas con menos recursos). No es que Flask esté "mal" — es una generación de diseño distinta.</p></div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">El mismo endpoint: crear usuario, en Flask</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route(&quot;/usuarios&quot;, methods=[&quot;POST&quot;])
+def crear_usuario():
+    data = request.get_json()
+
+    # Validacion manual, campo a campo
+    if &quot;nombre&quot; not in data or not isinstance(data[&quot;nombre&quot;], str):
+        return jsonify({&quot;error&quot;: &quot;nombre invalido&quot;}), 400
+    if &quot;edad&quot; not in data or not isinstance(data[&quot;edad&quot;], int):
+        return jsonify({&quot;error&quot;: &quot;edad invalida&quot;}), 400
+
+    return jsonify({&quot;mensaje&quot;: f&quot;Usuario {data[&#x27;nombre&#x27;]} creado&quot;}), 201</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Sin documentacion automatica. Sin validacion de tipos real (isinstance no distingue &quot;20&quot; de 20 salvo que lo compruebes tu).</p>
+</div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">El mismo endpoint, en FastAPI</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class UsuarioNuevo(BaseModel):
+    nombre: str
+    edad: int
+
+@app.post(&quot;/usuarios&quot;, status_code=201)
+def crear_usuario(usuario: UsuarioNuevo):
+    return {&quot;mensaje&quot;: f&quot;Usuario {usuario.nombre} creado&quot;}
+
+# La validacion de arriba (los dos &quot;if&quot;) desaparece entera.
+# Y /docs documenta este endpoint solo, sin hacer nada mas.</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Mismo comportamiento, sin la validacion manual — y con documentacion interactiva de regalo.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Comparación directa</h3>
+  </div>
+</div>
+<table class="cmp">
+<thead><tr><th></th><th>Flask</th><th>FastAPI</th></tr></thead>
+<tbody>
+<tr><td>Validación de datos</td><td class="no">Manual (a mano, por ti)</td><td class="yes">Automática (Pydantic)</td></tr>
+<tr><td>Documentación interactiva</td><td class="no">No, salvo extensión aparte</td><td class="yes">/docs y /redoc de fábrica</td></tr>
+<tr><td>Async nativo</td><td class="no">Limitado (WSGI, síncrono)</td><td class="yes">Nativo (ASGI)</td></tr>
+<tr><td>Inyección de dependencias</td><td class="no">No hay sistema propio</td><td class="yes">Depends() integrado</td></tr>
+<tr><td>Curva de entrada</td><td class="yes">Muy simple para algo pequeño</td><td class="no">Un poco más de conceptos al empezar</td></tr>
+<tr><td>Madurez del ecosistema</td><td class="yes">Muy amplio, 15 años</td><td class="no">Más joven, creciendo rápido</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">Depends(): inyección de dependencias de fábrica</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Ya usaste <code>Depends()</code> sin nombrarlo tanto si has hecho el curso de mocking de este bootcamp: es como FastAPI resuelve "qué objeto le paso a este endpoint" — una base de datos, el usuario autenticado, un cliente HTTP — sin que la función tenga que crearlo ella misma. Eso es justo lo que permite sustituir esas dependencias por versiones falsas en los tests con <code>app.dependency_overrides</code>, como viste en el laboratorio de mocking. Flask no trae un sistema equivalente integrado.</p></div>
+</div>
+</section>
+
+<section class="slide-summary">
+<div style="background:var(--bg-elevated);border-left:3px solid var(--cyan);border-radius:var(--radius);padding:16px 20px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);margin:0 0 12px 0">En resumen</h4>
+  <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px"><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>FastAPI convierte type hints en validación real y documentación automática; en Flask eso se escribe a mano.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>FastAPI es ASGI (async nativo); Flask es WSGI (síncrono por defecto).</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Depends() es el sistema de inyección de dependencias que hace testeable la API sin tocar código real.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Flask sigue siendo válido para cosas simples — FastAPI gana cuando el contrato de datos importa.</span></li></ul>
+</div>
+</section>
+
+<section class="slide-quiz">
+<div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin:0 0 16px 0">Autoevaluación (1/1)</h4>
+  <div class="quiz-question" style="margin-bottom:24px"><p><strong>Q1.</strong> ¿Cuál es la diferencia real entre isinstance(data["edad"], int) a mano en Flask, y edad: int en un modelo Pydantic?</p><ul style="list-style:none;padding:0;margin-top:10px"><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Ninguna, hacen exactamente lo mismo.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="true" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Pydantic además documenta el campo en /docs automáticamente y da un mensaje de error estructurado; el isinstance manual no.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">isinstance es más rápido en tiempo de ejecución siempre.</button></li><li style="margin-bottom:6px"><button onclick="quizCheck(this)" data-correct="false" style="width:100%;text-align:left;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);cursor:pointer;font-family:var(--font-body);font-size:13px">Pydantic solo funciona con FastAPI, no con Flask.</button></li></ul><p class="quiz-explanation hidden" style="margin-top:8px;padding:10px;background:var(--bg-elevated);border-radius:var(--radius);font-size:13px;color:var(--text-secondary)">La validación en sí puede ser parecida, pero Pydantic añade documentación automática y mensajes de error estructurados y consistentes, gratis.</p></div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 7 — EJERCICIO FINAL ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">🏁</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">7</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Ejercicio final: pruébalo tú mismo</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;"><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">construir el endpoint</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">probarlo a mano</li><li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">testearlo de verdad (mocking)</li></ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">El objetivo: cerrar el círculo con lo que ya sabes</h3>
+  </div>
+  <div style="color:var(--text-secondary)"><p style="margin:0 0 14px 0;line-height:1.7">Vas a construir un endpoint <code>GET /convertir?de=EUR&amp;a=USD&amp;cantidad=100</code> que llama a un servicio externo de tipos de cambio y devuelve el resultado. Es prácticamente el mismo escenario del laboratorio del curso de mocking (el de tipos de cambio) — pero esta vez lo construyes tú, lo pruebas a mano, y lo testeas de verdad. Nada de esto es nuevo: es aplicar los capítulos 1-6 de este curso más lo que ya construiste en el laboratorio de mocking.</p></div>
+</div>
+</section>
+
+<section class="slide-exercise">
+<div id="ejercicio-final-1" style="border:2px dashed var(--border);border-radius:var(--radius);padding:24px;margin-bottom:32px;background:var(--bg-elevated)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--orange-dim);color:var(--orange)">🟡 Andamiaje (1/2)</span>
+    <h4 style="margin:0;color:var(--text-primary)">Construye el endpoint y pruébalo a mano.</h4>
+  </div>
+  <p style="color:var(--text-secondary);margin-bottom:16px">
+    <strong>Paso 1 — Construir</strong> (20 min):<br>
+    Crea <code>GET /convertir</code> con query params <code>de: str</code>, <code>a: str</code>, <code>cantidad: float</code>. Usa <code>Depends()</code> para inyectar un cliente HTTP (como en el laboratorio de mocking) que llama a un servicio externo de tipos de cambio. Devuelve un modelo Pydantic con <code>de</code>, <code>a</code>, <code>cantidad_original</code>, <code>cantidad_convertida</code>.<br><br>
+    <strong>Paso 2</strong> — Probarlo a mano (10 min):<br>
+    Arranca con <code>uvicorn</code>. Pruébalo con <code>curl</code> Y con un fichero <code>.http</code> en REST Client — al menos una petición válida y una con un parámetro que falte, para ver el 422 real. Abre <code>/docs</code> y confirma que el endpoint aparece bien documentado, con "Try it out" funcionando.
+  </p>
+</div>
+</section>
+<section class="slide-exercise">
+<div id="ejercicio-final-2" style="border:2px dashed var(--border);border-radius:var(--radius);padding:24px;margin-bottom:32px;background:var(--bg-elevated)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--orange-dim);color:var(--orange)">🟡 Andamiaje (2/2)</span>
+    <h4 style="margin:0;color:var(--text-primary)">Testéalo de verdad, sin red real.</h4>
+  </div>
+  <p style="color:var(--text-secondary);margin-bottom:16px">
+    <strong>Paso 3</strong> — Testearlo de verdad (20 min):<br>
+    Escribe un test con <code>TestClient</code> + <code>app.dependency_overrides</code> que sustituya el cliente HTTP real por un <code>httpx.MockTransport</code> — exactamente el patrón del laboratorio de mocking, sin inventar nada nuevo. El test no debe abrir ni un socket real.<br><br>
+    <strong>Entrega</strong>: <code>main.py</code> con el endpoint, <code>peticiones.http</code> con al menos 2 peticiones, y <code>test_convertir.py</code> con al menos un test que pase sin red real.
+  </p>
+  <details style="margin-top:12px"><summary style="cursor:pointer;color:var(--orange);font-size:13px;font-weight:600">💡 Pista</summary><p style="margin-top:8px;font-size:13px;color:var(--text-secondary)">Si te atascas en el Paso 3, vuelve al Laboratorio del curso de mocking — el patrón de MockTransport + dependency_overrides es literalmente el mismo, solo cambia el nombre de los campos.</p></details>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box tip" style="margin-bottom:24px">
+  <div class="info-box-icon">KEY</div>
+  <div class="info-box-text"><strong>Por qué este ejercicio importa más que "otro CRUD"</strong> Un endpoint que llama a algo externo (y falla, o tarda, o cambia de formato) es el caso real del 90% de las APIs que vas a construir en el trabajo. Saber probarlo a mano (curl/REST Client), documentarlo solo (Pydantic + /docs), y testearlo sin depender de que el servicio externo esté vivo (mocking) es exactamente el ciclo completo de este bootcamp.</div>
+</div>
+</section>
+
+<section class="slide-summary">
+<div style="background:var(--bg-elevated);border-left:3px solid var(--cyan);border-radius:var(--radius);padding:16px 20px;margin-bottom:32px">
+  <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);margin:0 0 12px 0">Lo que has recorrido en este curso</h4>
+  <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px"><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Qué es REST de verdad: verbos, códigos de estado, statelessness.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Construir endpoints con FastAPI: path params, query params.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Pydantic como contrato de datos, entrada y salida.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Probar sin escribir código: curl y REST Client.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Documentación automática: /docs, /redoc, openapi.json.</span></li><li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--cyan);font-weight:700;flex-shrink:0">✓</span><span>Por qué FastAPI es una evolución real sobre Flask, no una moda.</span></li></ul>
+</div>
+</section>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+  Reveal.initialize({
+    hash: true,
+    transition: 'fade',
+    slideNumber: 'c/t',
+    center: false,
+    margin: 0.1,
+    width: 1200,
+    height: 800,
+    minScale: 0.2,
+    maxScale: 1.0,
+    plugins: []
+  });
+
+  function copyCode(btn) {
+    var block = btn.closest('.code-block');
+    var pre = block && block.querySelector('pre');
+    if (!pre) return;
+    navigator.clipboard.writeText(pre.innerText).then(function () {
+      btn.textContent = 'Copiado';
+      setTimeout(function () { btn.textContent = 'Copiar'; }, 2000);
+    });
+  }
+
+  function quizCheck(btn) {
+    var li = btn.parentElement;
+    var correct = btn.dataset.correct === 'true';
+    li.style.background = correct ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+    btn.style.color = correct ? '#10b981' : '#ef4444';
+    btn.style.borderColor = correct ? '#10b981' : '#ef4444';
+    var q = btn.closest('.quiz-question');
+    var expl = q && q.querySelector('.quiz-explanation');
+    if (expl) expl.style.display = 'block';
+  }
+</script>
+</body>
+</html>
