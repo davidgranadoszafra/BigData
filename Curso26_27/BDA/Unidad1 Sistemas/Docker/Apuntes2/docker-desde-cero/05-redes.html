@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker desde cero - Redes: como hablan los contenedores entre si</title>
+    <link rel="stylesheet" href="../shared/styles.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script>!function(){var t=localStorage.getItem('lucentia-theme')||'dark';'light'===t&&document.documentElement.setAttribute('data-theme','light')}()</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Abrir menú" aria-expanded="true">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <header class="page-hero">
+        <span class="page-hero-icon">05</span>
+        <h1>Redes: como hablan los contenedores entre si</h1>
+        <p>Una app casi nunca vive sola — necesita hablar con una base de datos, con otro servicio. ¿Como se encuentran dos contenedores distintos?</p>
+    </header>
+
+    <div class="content">
+        <h2>1. Por defecto, cada contenedor esta aislado</h2>
+        <p>
+            Cuando arrancas un contenedor sin especificar nada, Docker lo conecta a una red "bridge" por defecto. Ahi los contenedores pueden salir a internet, pero <strong>no se encuentran entre si por nombre</strong> facilmente. Para que dos contenedores tuyos se hablen de forma fiable, la practica real es crear tu propia red.
+        </p>
+
+        <h2>2. Crea tu propia red — y el nombre del contenedor se convierte en su direccion</h2>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Red personalizada, paso a paso</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker network create mi_red
+
+docker run -d --name servidor_bd --network mi_red mariadb:11.4 \
+  -e MARIADB_ROOT_PASSWORD=secreto
+
+docker run -it --name cliente --network mi_red ubuntu bash
+# dentro del contenedor cliente:
+ping servidor_bd</code></pre>
+        </div>
+        <p>
+            El <code>ping</code> funciona. Esa es la pieza clave: dentro de una red personalizada, Docker monta un DNS interno automatico — <strong>el nombre del contenedor ES su direccion</strong>. No necesitas saber ninguna IP. Tu aplicacion puede conectarse literalmente a <code>servidor_bd</code> como si fuera un nombre de dominio real, y Docker resuelve cual es ese contenedor por debajo.
+        </p>
+        <div class="info-box info">
+            <span class="info-box-icon">INFO</span>
+            <div class="info-box-text">
+                <strong>Por que esto importa de verdad:</strong> es el mecanismo que hace posible que, por ejemplo, un servidor web se conecte a <code>db:5432</code> sin que nadie tenga que ir a buscar y actualizar una IP cada vez que el contenedor de la base de datos se reinicia (las IPs internas pueden cambiar; el nombre, no).
+            </div>
+        </div>
+
+        <h2>3. Comandos para inspeccionar redes</h2>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Ver el estado de las redes</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker network ls                # que redes existen
+docker network inspect mi_red    # que contenedores estan conectados, con que IP</code></pre>
+        </div>
+
+        <h2>4. Que deberia quedarte claro al cerrar este capitulo</h2>
+        <ul>
+            <li>Contenedores en redes distintas (o en la red por defecto sin red propia) no se encuentran entre si de forma fiable.</li>
+            <li>Una red personalizada (<code>docker network create</code>) da DNS interno gratis: el nombre del contenedor es su direccion.</li>
+            <li>Este mecanismo es la base de todo lo que viene en el proximo capitulo: Compose crea esta red por ti automaticamente.</li>
+        </ul>
+        <p><strong>Siguiente capitulo:</strong> <a href="06-compose-basico.html">6. Docker Compose: levantar varios contenedores con un solo fichero</a>.</p>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="brand-logo">LucentIA</div>
+                <p>El DNS interno de Docker: por que el nombre del contenedor es suficiente direccion.</p>
+            </div>
+            <div class="footer-links">
+                <h5>Continuar</h5>
+                <ul>
+                    <li><a href="06-compose-basico.html">6. Compose basico</a></li>
+                    <li><a href="07-compose-avanzado.html">7. Compose avanzado</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">docker network create + --network: el nombre del contenedor es su direccion.</div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const code = button.closest('.code-block').querySelector('pre code').innerText;
+            navigator.clipboard.writeText(code);
+            button.textContent = 'Copiado';
+            setTimeout(() => { button.textContent = 'Copiar'; }, 1500);
+        }
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 12);
+        });
+    </script>
+<script src="../shared/lucentia.js" defer></script>
+
+<!-- ── Sidebar inyectada por inject_gen1_sidebar.py ────────────────────────── -->
+<nav id="sidebar" class="sidebar">
+  <div class="sidebar-logo">LucentIA</div>
+  <div class="sidebar-course">Docker desde cero - Indice</div>
+  <ul class="sidebar-nav">
+    <li class="sidebar-section">Índice del curso</li>
+    <li><a href="00-fundamentos.html">Docker desde cero - Que es Docker</a></li>
+    <li><a href="01-primer-contenedor.html">Docker desde cero - Primer contenedor</a></li>
+    <li><a href="02-imagenes-dockerfile.html">Docker desde cero - Imagenes y Dockerfile</a></li>
+    <li><a href="03-gestion-contenedores.html">Docker desde cero - Gestionar contenedores</a></li>
+    <li><a href="04-volumenes.html">Docker desde cero - Volumenes</a></li>
+    <li><a href="05-redes.html">Docker desde cero - Redes</a></li>
+    <li><a href="06-compose-basico.html">Docker desde cero - Compose basico</a></li>
+    <li><a href="07-compose-avanzado.html">Docker desde cero - Compose avanzado</a></li>
+    <li><a href="08-buenas-practicas.html">Docker desde cero - Buenas practicas</a></li>
+    <li><a href="index.html">Docker desde cero - Indice</a></li>
+  </ul>
+  <div class="theme-toggle">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+      <span id="themeIcon">&#9728;</span>
+      <span id="themeLabel">Modo claro</span>
+    </button>
+  </div>
+</nav>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker desde cero - Compose: levantar varios contenedores a la vez</title>
+    <link rel="stylesheet" href="../shared/styles.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script>!function(){var t=localStorage.getItem('lucentia-theme')||'dark';'light'===t&&document.documentElement.setAttribute('data-theme','light')}()</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Abrir menú" aria-expanded="true">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <header class="page-hero">
+        <span class="page-hero-icon">06</span>
+        <h1>Compose: levantar varios contenedores a la vez</h1>
+        <p>Ya sabes crear redes, volumenes y contenedores a mano. Ahora, la herramienta que declara todo eso en un solo fichero en vez de una lista de comandos que hay que recordar.</p>
+    </header>
+
+    <div class="content">
+        <h2>1. El problema que Compose resuelve</h2>
+        <p>
+            Para levantar una app con su base de datos a mano, necesitas: crear una red, arrancar la base de datos con sus variables de entorno y su volumen, arrancar la app conectada a esa misma red con sus propias variables... y recordar exactamente esos comandos, en ese orden, cada vez. <strong>Docker Compose</strong> describe todo eso en un fichero de texto y lo levanta con un solo comando.
+        </p>
+
+        <h2>2. Un docker-compose.yml minimo, real</h2>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">yaml - docker-compose.yml</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: secreto
+      MARIADB_DATABASE: miapp
+    volumes:
+      - datos_db:/var/lib/mysql
+
+volumes:
+  datos_db:</code></pre>
+        </div>
+        <p>Compara esto con todo lo que ya sabes de capitulos anteriores:</p>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>En el YAML</th>
+                        <th>Equivale a</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>services</code></td>
+                        <td>Cada bloque es como un <code>docker run</code> distinto — <code>app</code> y <code>db</code> son dos contenedores.</td>
+                    </tr>
+                    <tr>
+                        <td><code>build: .</code></td>
+                        <td><code>docker build</code> automatico, usando el Dockerfile de esta misma carpeta.</td>
+                    </tr>
+                    <tr>
+                        <td><code>ports</code></td>
+                        <td>El <code>-p</code> del capitulo 1.</td>
+                    </tr>
+                    <tr>
+                        <td><code>environment</code></td>
+                        <td>El <code>-e</code> del capitulo 3.</td>
+                    </tr>
+                    <tr>
+                        <td><code>volumes</code> (dentro del servicio + al final del fichero)</td>
+                        <td>El <code>-v nombre:destino</code> del capitulo 4, con el volumen declarado explicitamente.</td>
+                    </tr>
+                    <tr>
+                        <td>Sin <code>docker network create</code> en ningun sitio</td>
+                        <td>Compose crea una red propia para este proyecto automaticamente. <code>app</code> ya puede hablarle a <code>db</code> por su nombre — el capitulo 5, gratis.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>3. Los comandos del dia a dia</h2>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Ciclo de vida con Compose</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker compose up -d          # construye lo que haga falta y levanta todo
+docker compose ps             # estado de los servicios de ESTE proyecto
+docker compose logs -f app    # logs de un servicio concreto, en vivo
+docker compose down           # para y elimina los contenedores (los volumenes se quedan)
+docker compose down -v        # lo mismo, pero borra tambien los volumenes -- cuidado</code></pre>
+        </div>
+        <div class="info-box warning">
+            <span class="info-box-icon">WARN</span>
+            <div class="info-box-text">
+                <strong><code>depends_on</code> no espera a que el servicio este listo, solo a que arranque.</strong> En el ejemplo, <code>app</code> puede intentar conectarse a <code>db</code> antes de que MariaDB haya terminado de inicializarse por dentro. Es un fallo muy comun al empezar con Compose — la solucion real (<code>healthcheck</code> + <code>condition: service_healthy</code>) esta en el siguiente capitulo.
+            </div>
+        </div>
+
+        <h2>4. Que deberia quedarte claro al cerrar este capitulo</h2>
+        <ul>
+            <li>Compose no es magia nueva — declara en YAML los mismos <code>run</code>, <code>-p</code>, <code>-e</code>, <code>-v</code> que ya conoces.</li>
+            <li>Crea una red propia automaticamente: los servicios se hablan entre si por su nombre, sin configurar nada.</li>
+            <li><code>depends_on</code> solo controla el orden de arranque, no si el servicio ya esta "listo" de verdad.</li>
+        </ul>
+        <p><strong>Siguiente capitulo:</strong> <a href="07-compose-avanzado.html">7. Compose avanzado: healthchecks, .env y perfiles</a>.</p>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="brand-logo">LucentIA</div>
+                <p>Todo lo aprendido hasta ahora, declarado en un solo fichero.</p>
+            </div>
+            <div class="footer-links">
+                <h5>Continuar</h5>
+                <ul>
+                    <li><a href="07-compose-avanzado.html">7. Compose avanzado</a></li>
+                    <li><a href="08-buenas-practicas.html">8. Buenas practicas</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">docker compose up -d / down -- servicios, red propia automatica, depends_on no es un healthcheck.</div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const code = button.closest('.code-block').querySelector('pre code').innerText;
+            navigator.clipboard.writeText(code);
+            button.textContent = 'Copiado';
+            setTimeout(() => { button.textContent = 'Copiar'; }, 1500);
+        }
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 12);
+        });
+    </script>
+<script src="../shared/lucentia.js" defer></script>
+
+<!-- ── Sidebar inyectada por inject_gen1_sidebar.py ────────────────────────── -->
+<nav id="sidebar" class="sidebar">
+  <div class="sidebar-logo">LucentIA</div>
+  <div class="sidebar-course">Docker desde cero - Indice</div>
+  <ul class="sidebar-nav">
+    <li class="sidebar-section">Índice del curso</li>
+    <li><a href="00-fundamentos.html">Docker desde cero - Que es Docker</a></li>
+    <li><a href="01-primer-contenedor.html">Docker desde cero - Primer contenedor</a></li>
+    <li><a href="02-imagenes-dockerfile.html">Docker desde cero - Imagenes y Dockerfile</a></li>
+    <li><a href="03-gestion-contenedores.html">Docker desde cero - Gestionar contenedores</a></li>
+    <li><a href="04-volumenes.html">Docker desde cero - Volumenes</a></li>
+    <li><a href="05-redes.html">Docker desde cero - Redes</a></li>
+    <li><a href="06-compose-basico.html">Docker desde cero - Compose basico</a></li>
+    <li><a href="07-compose-avanzado.html">Docker desde cero - Compose avanzado</a></li>
+    <li><a href="08-buenas-practicas.html">Docker desde cero - Buenas practicas</a></li>
+    <li><a href="index.html">Docker desde cero - Indice</a></li>
+  </ul>
+  <div class="theme-toggle">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+      <span id="themeIcon">&#9728;</span>
+      <span id="themeLabel">Modo claro</span>
+    </button>
+  </div>
+</nav>
+
+</body>
+</html>

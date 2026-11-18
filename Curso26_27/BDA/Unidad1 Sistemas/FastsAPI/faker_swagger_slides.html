@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Datos Sintéticos con Faker + FastAPI y Swagger Pro - Slides</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap');
+
+    :root {
+      --neon-blue: #0ea5e9;
+      --neon-green: #10b981;
+      --bg-dark: #0f172a;
+      --text-main: #cbd5e1;
+
+      --bg-elevated:   #1c1812;
+      --bg-card:       #221d16;
+      --border:        #2a2418;
+      --text-primary:  #f0e8d4;
+      --text-secondary:#b8b09c;
+      --text-muted:    #7a715a;
+      --orange:        #f97316;
+      --orange-dim:    #2a1a0a;
+      --green:         #4ade80;
+      --green-dim:     #0d2818;
+      --red:           #f87171;
+      --red-dim:       #2a1010;
+      --cyan:          #38bdf8;
+      --cyan-dim:      #0c2540;
+      --purple:        #c2845a;
+      --purple-dim:    #1f1408;
+      --accent:        #38bdf8;
+      --surface:       #1c1812;
+      --font-body:     'Inter', system-ui, sans-serif;
+      --font-mono:     'JetBrains Mono', ui-monospace, monospace;
+      --radius:        8px;
+    }
+
+    body { background-color: var(--bg-dark); }
+    .reveal { font-family: 'Inter', sans-serif; color: var(--text-main); }
+
+    .reveal .slides section {
+      max-height: 800px;
+      overflow-y: auto;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3 {
+      text-transform: none;
+      color: #f8fafc;
+      font-weight: 800;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    .reveal h1 { color: var(--neon-blue); font-size: 2.2em; text-align: center; }
+    .reveal h2 { font-size: 1.6em; border-bottom: 2px solid #334155; padding-bottom: 10px; }
+    .reveal h3 { font-size: 1.3em; color: var(--neon-green); }
+
+    .reveal p {
+      font-size: 28px;
+      line-height: 1.5;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .reveal strong { color: inherit; font-weight: bold; }
+
+    .reveal pre {
+      width: 100%;
+      margin: 20px 0;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+    }
+    .reveal pre code {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 16px;
+      line-height: 1.35;
+      padding: 24px;
+      max-height: 620px;
+      overflow-y: auto;
+    }
+
+    .reveal .code-block {
+      background: rgba(255, 215, 150, 0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    .reveal .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+    .reveal .code-lang {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--cyan);
+      font-weight: 500;
+    }
+    .reveal .copy-btn {
+      background: transparent;
+      border: 1px solid #3a3122;
+      color: var(--text-muted);
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: var(--font-body);
+    }
+    .reveal .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .reveal .code-block pre { margin: 0; border: none; box-shadow: none; border-radius: 0; }
+
+    .slide-concept, .slide-code, .slide-summary, .slide-definition {
+      text-align: left;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .reveal .widget-container { padding: 0; box-shadow: none; border: none; background: transparent; }
+    .reveal .concept-body { display: flex; flex-direction: column; gap: 15px; }
+
+    .reveal .slide-summary li { font-size: 28px !important; margin-bottom: 20px !important; line-height: 1.4 !important; }
+    .reveal .slide-summary h4 { font-size: 32px !important; margin-bottom: 24px !important; }
+    .reveal .slide-summary div { padding: 40px !important; }
+    .reveal .slide-concept h3 { font-size: 40px !important; }
+    .reveal .info-box-text { font-size: 28px !important; }
+    .reveal .widget-cards h4 { font-size: 28px !important; }
+    .reveal .widget-cards p { font-size: 22px !important; }
+
+    .reveal .quiz-question { font-size: 28px; color: var(--text-primary); margin-bottom: 24px; font-weight: 600; line-height: 1.4; }
+    .reveal .quiz-options { list-style: none; padding: 0; margin: 0 0 20px 0; display: flex; flex-direction: column; gap: 12px; }
+    .reveal .quiz-option {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      font-size: 22px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .reveal .quiz-option:hover { border-color: var(--cyan); color: var(--text-primary); }
+    .reveal .quiz-btn {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .reveal .quiz-explanation {
+      display: none;
+      background: var(--bg-card);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 14px 18px;
+      font-size: 20px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .reveal .info-box {
+      border: 1px solid;
+      border-radius: var(--radius);
+      padding: 18px 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin: 20px 0;
+      color: var(--text-primary);
+    }
+    .reveal .info-box p,
+    .reveal .info-box li,
+    .reveal .info-box span:not(.info-box-icon):not(.info-box-label) { color: inherit; }
+    .reveal .info-box.info    { background: var(--cyan-dim);   border-color: var(--cyan);   }
+    .reveal .info-box.warning,
+    .reveal .info-box.warn    { background: var(--orange-dim); border-color: var(--orange); }
+    .reveal .info-box.danger,
+    .reveal .info-box.fail    { background: var(--red-dim);    border-color: var(--red);    }
+    .reveal .info-box.success,
+    .reveal .info-box.tip     { background: var(--green-dim);  border-color: var(--green);  }
+    .reveal .info-box-icon,
+    .reveal .info-box-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .reveal .info-box.info    .info-box-icon,
+    .reveal .info-box.info    .info-box-label { background: var(--cyan-dim);   color: var(--cyan);   }
+    .reveal .info-box.warning .info-box-icon,
+    .reveal .info-box.warning .info-box-label,
+    .reveal .info-box.warn    .info-box-icon,
+    .reveal .info-box.warn    .info-box-label { background: var(--orange-dim); color: var(--orange); }
+    .reveal .info-box.danger  .info-box-icon,
+    .reveal .info-box.danger  .info-box-label,
+    .reveal .info-box.fail    .info-box-icon,
+    .reveal .info-box.fail    .info-box-label { background: var(--red-dim);    color: var(--red);    }
+    .reveal .info-box.success .info-box-icon,
+    .reveal .info-box.success .info-box-label { background: var(--green-dim);  color: var(--green);  }
+    .reveal .info-box-text { font-size: 22px; line-height: 1.5; color: var(--text-primary); }
+
+    .reveal .slide-example ol { font-size: 28px; line-height: 1.5; }
+    .reveal .slide-example li { margin-bottom: 16px; }
+    .reveal .slide-example li span { font-size: 18px !important; }
+
+    .reveal .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 20px 0; }
+    .reveal .concept-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; border-top: 4px solid transparent; }
+    .reveal .concept-card h3 { font-size: 22px; margin: 8px 0 10px; }
+    .reveal .concept-card p { font-size: 16px; color: var(--text-secondary); margin: 0; }
+    .reveal .concept-icon { font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; display: inline-block; padding: 3px 10px; border-radius: 4px; background: var(--bg-elevated); color: var(--text-muted); }
+    .reveal .concept-card.orange { border-top-color: var(--orange); } .reveal .concept-card.orange h4 { color: var(--orange); }
+    .reveal .concept-card.cyan   { border-top-color: var(--cyan);   } .reveal .concept-card.cyan   h4 { color: var(--cyan);   }
+    .reveal .concept-card.green  { border-top-color: var(--green);  } .reveal .concept-card.green  h4 { color: var(--green);  }
+    .reveal .concept-card.purple { border-top-color: var(--purple); } .reveal .concept-card.purple h4 { color: var(--purple); }
+    .reveal .concept-card.red    { border-top-color: var(--red);    } .reveal .concept-card.red    h4 { color: var(--red);    }
+  </style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+<!-- ══════════════════════════ PORTADA ══════════════════════════ -->
+<section class="slide-deck_cover">
+    <div class="widget-deck-cover" style="height:100%; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; background-color:#0f172a; color:#ffffff; padding:60px; text-align:left; box-sizing:border-box;">
+        <h1 style="font-size:60px; color:#ffffff; margin:0 0 20px 0; line-height:1.2; font-weight:bold; max-width:100%; min-width:0; overflow-wrap:break-word;">Datos Sintéticos con Faker + FastAPI y Swagger Pro</h1>
+        <h3 style="font-size:32px; color:#38bdf8; margin:0 0 15px 0; max-width:100%; min-width:0; overflow-wrap:break-word;">De simular Big Data e IoT a diseñar portales de API empresariales</h3>
+        <p style="font-size:20px; color:#94a3b8; margin:0;">Big Data Aplicado · Unidad 1 Sistemas · Prof. David Granados Zafra</p>
+    </div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 1 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">🎲</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">1</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">El Porqué del Dato Sintético en Big Data</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;">
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">privacidad y RGPD</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">volumen masivo vs JSONs manuales</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">simulación de streaming y microservicios</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">casos límite y anomalías</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h3 style="margin:0;min-width:0;overflow-wrap:break-word">El dilema del huevo y la gallina en Big Data</h3>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-card cyan">
+      <span class="concept-icon">RGPD</span>
+      <h4>Privacidad Innegociable</h4>
+      <p>No puedes usar datos de producción en desarrollo ni en clase. Las multas por fuga alcanzan el 4% de la facturación global.</p>
+    </div>
+    <div class="concept-card green">
+      <span class="concept-icon">VOLUMEN</span>
+      <h4>Escala Realista</h4>
+      <p>Para probar Kafka, Spark o una API necesitas miles de eventos distribuidos en el tiempo, no 3 objetos JSON escritos a mano.</p>
+    </div>
+    <div class="concept-card orange">
+      <span class="concept-icon">EDGES</span>
+      <h4>Casos Límite</h4>
+      <p>Nombres con tildes, formatos de teléfono raros, DNIs complejos y anomalías que nunca pondrías tú a mano.</p>
+    </div>
+    <div class="concept-card purple">
+      <span class="concept-icon">VELOCIDAD</span>
+      <h4>Desarrollo Autónomo</h4>
+      <p>Genera en segundos esquemas completos para no depender de otros equipos ni de bases de datos remotas.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box warning" style="margin-bottom:24px">
+  <div class="info-box-icon">TRAMPA</div>
+  <div class="info-box-text"><strong>El error de crear 5 registros a mano en un archivo estático:</strong> En cuanto quieras probar paginación de 50 en 50, filtros combinados o estrés con concurrencia, tu aplicación parecerá que funciona pero colapsará en producción. Faker resuelve esto inyectando vida masiva.</div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 2 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">⚡</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">2</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Faker en Profundidad: Generando Cosas Chulas</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;">
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">localización es_ES, DNI y direcciones</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">i18n extrema: árabe (RTL), chino y alfabetos no latinos</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">sector automoción: VIN, matrículas y telemetría de flotas</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">sensores IoT y reproducibilidad con Faker.seed()</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Primeros pasos: Localización en Español</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">from faker import Faker
+
+# Configurar proveedor en español de España
+fake = Faker('es_ES')
+
+# Datos de identidad y contacto
+print(fake.name())           # 'Lucía Navarro Beltrán'
+print(fake.dni())            # '48291047X' (¡letra calculada con el algoritmo real!)
+print(fake.address())        # 'Calle Mayor 12, 4º B, 46001 Valencia'
+print(fake.phone_number())   # '+34 612 34 56 78'
+print(fake.iban())           # 'ES91 2100 0418 4502 0005 1332'</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Faker adapta los códigos postales, prefijos y letras de control a la normativa española.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--orange-dim);color:var(--orange)">🌍 i18n & Encodings</span>
+    <h3 style="margin:0">La Trampa de Occidente: Alfabetos que rompen Webs y APIs</h3>
+  </div>
+  <p style="color:var(--text-secondary);font-size:18px;line-height:1.6;margin-bottom:20px">
+    El error clásico de desarrollo es probar solo con <em>"Juan García"</em>. En producción internacional, las APIs y webs colapsan por problemas que Faker te permite anticipar:
+  </p>
+  <div class="concept-grid">
+    <div class="concept-card orange">
+      <span class="concept-icon">RTL</span>
+      <h4>Árabe (ar_SA) y Hebreo</h4>
+      <p>Texto Right-to-Left. Invierte maquetaciones visuales, desborda formularios y rompe concatenaciones ingenuas sin soporte bidireccional (bidi).</p>
+    </div>
+    <div class="concept-card cyan">
+      <span class="concept-icon">UTF-8</span>
+      <h4>Chino (zh_CN) y Multibyte</h4>
+      <p>Ideogramas de 3-4 bytes. Si la base de datos usa codificaciones antiguas (latin1), genera <em>Mojibake</em> (????) y corrupción de datos.</p>
+    </div>
+    <div class="concept-card purple">
+      <span class="concept-icon">LONGITUD</span>
+      <h4>Validaciones Frágiles</h4>
+      <p>Nombres chinos legítimos de 2 caracteres como <em>"张伟"</em> hacen explotar validaciones simplistas de tipo <code>min_length=3</code> en Pydantic.</p>
+    </div>
+    <div class="concept-card green">
+      <span class="concept-icon">CIRÍLICO</span>
+      <h4>Ruso (ru_RU) y Japonés</h4>
+      <p>Caracteres no ASCII que rompen cabeceras HTTP, codificación en URLs (percent-encoding) y filtros de búsqueda por texto.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Faker Multilingüe: Rompiendo tu API con Árabe, Chino y Cirílico</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">from faker import Faker
+
+# Generadores por localización idiomática
+fake_ar = Faker('ar_SA')   # Árabe (texto RTL, derecha a izquierda)
+fake_zh = Faker('zh_CN')   # Chino simplificado (ideogramas multibyte UTF-8)
+fake_ja = Faker('ja_JP')   # Japonés (Kanji / Hiragana / Katakana)
+fake_ru = Faker('ru_RU')   # Ruso (alfabeto cirílico)
+
+print("Árabe (RTL):", fake_ar.name(), "|", fake_ar.address())
+# 'محمد بن سلمان' -> ¿Tu frontend soporta texto RTL sin desbordar?
+
+print("Chino (Multibyte):", fake_zh.name(), "|", fake_zh.city())
+# '张伟' -> ¿Falla tu Pydantic si tienes min_length=3?
+
+# Generador multilocale ponderado (dataset global y realista):
+fake_global = Faker(['es_ES', 'ar_SA', 'zh_CN', 'en_US'])
+usuarios_globales = [fake_global.name() for _ in range(10)]
+</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Si tu API valida y almacena correctamente datos árabes y chinos combinados, está blindada para cualquier mercado del mundo.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Datos de Dominio Específico: Automoción, Flotas de Vehículos y VIN</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">import random
+from faker import Faker
+
+fake = Faker('es_ES')
+
+def generar_evento_vehiculo():
+    marcas_modelos = [
+        ("Tesla", "Model 3", "Eléctrico"),
+        ("Seat", "León", "Combustión"),
+        ("Toyota", "Corolla", "Híbrido"),
+        ("Renault", "Megane E-Tech", "Eléctrico"),
+        ("Volvo", "XC60", "Híbrido Enchufable")
+    ]
+    marca, modelo, propuls = random.choice(marcas_modelos)
+    
+    return {
+        # Bastidor oficial (17 caracteres alfanuméricos bajo ISO 3779)
+        "vin": fake.vin(),
+        # Matrícula española oficial (4 dígitos y 3 letras consonantes)
+        "matricula": fake.bothify('#### ???').upper(),
+        "marca": marca,
+        "modelo": modelo,
+        "tipo_propulsion": propuls,
+        "conductor_asignado": fake.name(),
+        "odometro_km": random.randint(15000, 185000),
+        "velocidad_kmh": round(max(0.0, random.gauss(95.0, 18.0)), 1),
+        "nivel_bateria_combustible_pct": random.randint(10, 100),
+        # Códigos de diagnosis OBD-II estándar de averías
+        "codigo_obd2": random.choices(
+            ["P0000_OK", "P0420_CATALYST", "P0300_MISFIRE", "P0171_LEAN_BANK"],
+            weights=[80, 10, 5, 5]
+        )[0],
+        "gps": {"lat": float(fake.latitude()), "lon": float(fake.longitude())},
+        "timestamp": fake.date_time_between(start_date="-30m", end_date="now").isoformat()
+    }
+</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">fake.vin() y fake.bothify() simulan flotas completas de vehículos conectados para analítica de Big Data.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box tip" style="margin-bottom:24px">
+  <div class="info-box-icon">EXTENSIÓN</div>
+  <div class="info-box-text"><strong>Custom Providers y paquetes comunitarios:</strong> Para modelos de coches aún más específicos puedes instalar <code>pip install faker-vehicle</code> (que incluye <code>fake.vehicle_year_make_model()</code>) o crear tus propios proveedores heredando de <code>faker.providers.BaseProvider</code> para generar datos propietarios de cualquier industria.</div>
+</div>
+</section>
+
+<section class="slide-example">
+<div style="margin-bottom:32px">
+  <h3>Simulación de Sensores IoT para Smart City</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">import random
+from faker import Faker
+
+fake = Faker('es_ES')
+
+def generar_sensor_iot():
+    ciudad = random.choice(['Alcoy', 'Valencia', 'Alicante', 'Castellón'])
+    return {
+        "sensor_id": f"SN-{ciudad[:3].upper()}-{fake.bothify('####')}",
+        "ciudad": ciudad,
+        "latitud": float(fake.latitude()),
+        "longitud": float(fake.longitude()),
+        "temperatura": round(random.gauss(mu=21.5, sigma=4.0), 1),  # Gaussiana
+        "humedad": round(random.uniform(30.0, 95.0), 1),
+        "co2_ppm": random.randint(380, 1100),
+        "estado": random.choices(['OK', 'WARNING', 'CRITICAL'], weights=[85, 12, 3])[0],
+        "timestamp": fake.date_time_between(start_date="-2h", end_date="now").isoformat()
+    }</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Combina distribuciones estadísticas reales con los generadores de texto de Faker.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box tip" style="margin-bottom:24px">
+  <div class="info-box-icon">PRO-TIP</div>
+  <div class="info-box-text"><strong>El poder de las semillas (Seeds):</strong> Para que tus tests unitarios y pruebas de integración sean deterministas, usa <code>Faker.seed(42)</code>. Generará datos que parecen aleatorios pero que serán exactamente los mismos en cada ejecución.</div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 3 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">🚀</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">3</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Construyendo APIs con Datos Falsos en FastAPI</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;">
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">el patrón In-Memory Mock Store</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">modelos Pydantic v2 y validaciones</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">filtrado, límites y paginación</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">endpoint de ráfagas sintéticas al vuelo</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Modelando con Pydantic y Enums</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">from pydantic import BaseModel, Field
+from enum import Enum
+from datetime import datetime
+
+class EstadoSensor(str, Enum):
+    OK = "OK"
+    WARNING = "WARNING"
+    CRITICAL = "CRITICAL"
+
+class LecturaSensor(BaseModel):
+    id: str = Field(..., description="UUID de la lectura")
+    sensor_id: str = Field(..., description="Código del hardware")
+    ciudad: str = Field(..., description="Municipio de instalación")
+    temperatura: float = Field(..., ge=-20.0, le=60.0, description="ºC")
+    humedad: float = Field(..., ge=0.0, le=100.0, description="%")
+    co2_ppm: int = Field(..., ge=200, le=5000, description="PPM de CO2")
+    estado: EstadoSensor
+    timestamp: datetime</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Pydantic valida tipos y rangos. Si Faker genera un valor absurdo, el modelo avisa de inmediato.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Endpoints de Consulta y de Inyección Masiva</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">from fastapi import FastAPI, Query, status
+from typing import List, Optional
+
+app = FastAPI()
+DATABASE: List[LecturaSensor] = [generar_sensor_iot() for _ in range(50)]
+
+@app.get("/api/v1/telemetry", response_model=List[LecturaSensor])
+async def get_telemetry(ciudad: Optional[str] = None, limit: int = Query(20, le=100)):
+    res = [r for r in DATABASE if not ciudad or r.ciudad.lower() == ciudad.lower()]
+    return res[:limit]
+
+@app.post("/api/v1/simulate/burst", status_code=status.HTTP_201_CREATED)
+async def simulate_burst(count: int = Query(10, le=200)):
+    nuevas = [generar_sensor_iot() for _ in range(count)]
+    DATABASE.extend(nuevas)
+    return {"mensaje": f"{count} eventos inyectados", "total_almacenado": len(DATABASE)}</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Los alumnos pueden simular ráfagas de 50 o 100 eventos con un solo clic en Swagger.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box warning" style="margin-bottom:24px">
+  <div class="info-box-icon">OJO</div>
+  <div class="info-box-text"><strong>Listas en memoria vs Producción:</strong> Una lista global <code>DATABASE = []</code> es perfecta para clase y prototipado rápido, pero se reinicia cada vez que reinicias uvicorn. En las siguientes unidades la reemplazaremos por Redis o PostgreSQL.</div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 4 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">📑</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">4</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Metiéndole Caña a Swagger: OpenAPI Enterprise</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;">
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">metadatos globales y markdown rico</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">organización por tags temáticos</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">la joya: Field(examples=[...]) y datos Faker en Try it out</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">documentación explícita de respuestas de error</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--cyan-dim);color:var(--cyan)">⚙️ ARQUITECTURA</span>
+    <h3 style="margin:0">¿Dónde se mete la Configuración Global en FastAPI?</h3>
+  </div>
+  <p style="color:var(--text-secondary);font-size:18px;line-height:1.6;margin-bottom:20px">
+    Se define en el <strong>punto de entrada de tu aplicación</strong> (habitualmente <code>main.py</code> o <code>app.py</code>), directamente al crear la instancia del objeto principal <code>app = FastAPI(...)</code>:
+  </p>
+  <div class="concept-grid">
+    <div class="concept-card cyan">
+      <span class="concept-icon">ENTRY</span>
+      <h4>Instancia Única</h4>
+      <p>Vive en <code>main.py</code>. Es el objeto raíz que luego arranca el servidor ASGI con <code>uvicorn main:app --reload</code>.</p>
+    </div>
+    <div class="concept-card green">
+      <span class="concept-icon">METADATOS</span>
+      <h4>title, version y Markdown</h4>
+      <p>La <code>description</code> admite Markdown completo (listas, negritas, enlaces) para documentar el propósito del sistema.</p>
+    </div>
+    <div class="concept-card orange">
+      <span class="concept-icon">TAGS</span>
+      <h4>openapi_tags</h4>
+      <p>Agrupa y categoriza endpoints en carpetas visuales dentro de Swagger, con descripciones por módulo.</p>
+    </div>
+    <div class="concept-card purple">
+      <span class="concept-icon">RUTAS</span>
+      <h4>docs_url y contacto</h4>
+      <p>Permite personalizar o desactivar <code>/docs</code> en producción y firmar la autoría del equipo de Big Data.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Configuración Global en main.py: Swagger Enterprise</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python"># main.py - Punto de entrada de la aplicación
+from fastapi import FastAPI
+
+# 1. Definimos los grupos temáticos (Tags) que organizan Swagger UI
+tags_metadata = [
+    {"name": "Telemetría IoT", "description": "Sensores urbanos y lecturas en tiempo real."},
+    {"name": "Simulación Faker", "description": "Inyección masiva de eventos sintéticos para estrés."}
+]
+
+# 2. AQUÍ SE METE: Al instanciar 'app' con todos sus metadatos globales
+app = FastAPI(
+    title="CityData Streamer API 🏙️⚡",
+    description="""
+    ## Portal de Telemetría y Big Data Urbano
+    API oficial para monitorización de flotas y sensores.
+    * **Streaming**: Diseñado para alimentar Apache Kafka y Spark.
+    * **Faker**: Generación sintética determinista sin riesgo de RGPD.
+    """,
+    version="1.2.0",
+    openapi_tags=tags_metadata,
+    contact={"name": "Equipo Big Data Batoi", "email": "bigdata@cipfpbatoi.es"},
+    docs_url="/docs",       # Dónde se sirve la UI interactiva
+    redoc_url="/redoc"      # Documentación alternativa de solo lectura
+)</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">FastAPI compila estos metadatos en un esquema OpenAPI 3.1.0 estándar en /openapi.json.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-concept">
+<div style="margin-bottom:32px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--green-dim);color:var(--green)">💡 MECANISMO INTERNO</span>
+    <h3 style="margin:0">¿Por qué 'examples=[...]' aparece en Swagger?</h3>
+  </div>
+  <p style="color:var(--text-secondary);font-size:18px;line-height:1.6;margin-bottom:20px">
+    Swagger UI no lee código Python directamente; existe una cadena de compilación de esquemas:
+  </p>
+  <div class="concept-grid">
+    <div class="concept-card cyan">
+      <span class="concept-icon">PIPELINE</span>
+      <h4>Pydantic ➔ /openapi.json</h4>
+      <p>FastAPI exporta tus modelos a JSON Schema (OpenAPI 3.1.0). El atributo <code>examples=[...]</code> se convierte en la clave estándar <code>"examples": [...]</code>.</p>
+    </div>
+    <div class="concept-card green">
+      <span class="concept-icon">TRY IT OUT</span>
+      <h4>Auto-rellenado Activo</h4>
+      <p>Al pulsar <em>'Try it out'</em>, Swagger lee esos ejemplos y <strong>pre-rellena el formulario</strong> con datos creíbles en vez de un triste <code>"string"</code> o campos vacíos.</p>
+    </div>
+    <div class="concept-card orange">
+      <span class="concept-icon">TRAMPA</span>
+      <h4>default ≠ examples</h4>
+      <p><code>default="X"</code> hace el campo <strong>opcional</strong>. En cambio, <code>Field(..., examples=["X"])</code> mantiene el campo <strong>OBLIGATORIO</strong> (<code>...</code>); el ejemplo es solo documentación.</p>
+    </div>
+    <div class="concept-card purple">
+      <span class="concept-icon">v1 vs v2</span>
+      <h4>Pydantic v1 vs v2</h4>
+      <p>En Pydantic v1 era singular: <code>example="X"</code>. En Pydantic v2 / OpenAPI 3.1 se usa una lista en plural: <code>examples=["X", "Y"]</code>.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Implementación: Ejemplos de Campo y de Modelo Completo</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">from pydantic import BaseModel, Field
+
+class LecturaSensor(BaseModel):
+    # '...' indica OBLIGATORIO. 'examples' es la muestra para Swagger:
+    sensor_id: str = Field(
+        ..., 
+        description="Identificador único del hardware emisor", 
+        examples=["SN-ALC-4091"]  # <-- Swagger lo usa para auto-rellenar
+    )
+    ciudad: str = Field(..., examples=["Alcoy", "Valencia"])
+    temperatura: float = Field(..., ge=-20.0, le=60.0, examples=[21.4])
+    co2_ppm: int = Field(..., examples=[420])
+
+    # Ejemplo del objeto JSON COMPLETO para la documentación:
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "sensor_id": "SN-VAL-8821",
+                    "ciudad": "Valencia",
+                    "temperatura": 23.5,
+                    "co2_ppm": 410
+                }
+            ]
+        }
+    }</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">Combina Field(..., examples=[...]) para cada propiedad y json_schema_extra para el JSON global.</p>
+</div>
+</div>
+</section>
+
+<section class="slide-alert">
+<div class="info-box warning" style="margin-bottom:24px">
+  <div class="info-box-icon">¡CUIDADO!</div>
+  <div class="info-box-text"><strong>El error de novato: default vs examples.</strong> Si pones <code>ciudad: str = "Alcoy"</code>, el cliente puede omitir el campo y la API lo aceptará con ese valor por defecto. Si pones <code>ciudad: str = Field(..., examples=["Alcoy"])</code>, el campo sigue siendo <strong>estrictamente obligatorio</strong>; el valor solo sirve de guía para quien prueba la API en Swagger.</div>
+</div>
+</section>
+
+<section class="slide-code">
+<div style="margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Documentando Respuestas de Error HTTP 404</h3>
+  <div class="code-block">
+  <div class="code-header">
+    <span class="code-lang">python</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+  </div>
+  <pre><code class="language-python">class ErrorResponse(BaseModel):
+    detalle: str = Field(..., examples=["Sensor no encontrado en la red"])
+    codigo_error: str = Field(..., examples=["SENSOR_NOT_FOUND"])
+
+@app.get(
+    "/api/v1/sensors/{sensor_id}",
+    response_model=LecturaSensor,
+    responses={
+        200: {"description": "Lectura recuperada con éxito."},
+        404: {"model": ErrorResponse, "description": "El sensor no existe en la base de datos."}
+    }
+)
+async def get_sensor(sensor_id: str):
+    # Lógica de búsqueda...
+    pass</code></pre>
+  <p class="code-caption" style="padding:6px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);font-style:italic">El desarrollador cliente ve en Swagger exactamente qué JSON recibirá si algo falla.</p>
+</div>
+</div>
+</section>
+
+<!-- ══════════════════════════ CAPÍTULO 5 ══════════════════════════ -->
+<section class="slide-deck_chapter">
+    <div class="widget-deck-chapter" style="height:100%; width:100%; display:flex; background-color:#ffffff; color:#333333; text-align:left;">
+        <div style="width:30%; background:linear-gradient(90deg, #eee 0%, #fff 100%); border-right:1px solid #ddd;">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:40px; color:#ccc;">🛠️</div>
+        </div>
+        <div style="width:70%; padding:80px; box-sizing:border-box; min-width:0;">
+            <div style="display:flex; align-items:baseline; gap:20px;">
+                <span style="font-size:160px; font-weight:bold; color:#0ea5e9; line-height:1; flex-shrink:0;">5</span>
+                <h1 style="font-size:48px; color:#0ea5e9; font-weight:bold; margin:0; min-width:0; overflow-wrap:break-word;">Reto de Laboratorio: Simulador Smart City</h1>
+            </div>
+            <ul style="list-style-type:disc; padding-left:40px; margin-top:40px;">
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">fase 1: generador Faker de telemetría urbana</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">fase 2: microservicio FastAPI con filtros y ráfagas</li>
+                <li style="color:#0ea5e9; font-size:28px; margin-bottom:12px; font-weight:bold;">fase 3: Swagger enriquecido listo para consumo</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="slide-exercise">
+<div style="border:2px dashed var(--border);border-radius:var(--radius);padding:24px;margin-bottom:32px;background:var(--bg-elevated)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--orange-dim);color:var(--orange)">🛠️ Reto Práctico</span>
+    <h4 style="margin:0;color:var(--text-primary)">Construye el Simulador de Sensores de tu Ciudad</h4>
+  </div>
+  <p style="color:var(--text-secondary);margin-bottom:16px;font-size:22px;">
+    <strong>Objetivo</strong>: Crear un microservicio con FastAPI que alimente un panel de monitorización con datos sintéticos generados al vuelo con Faker.<br><br>
+    1. <strong>Generador</strong>: Crea una función que simule lecturas de calidad del aire con coordenadas GPS, temperatura gaussiana y estado.<br>
+    2. <strong>Endpoints</strong>: Implementa <code>GET /telemetry</code> con filtros y <code>POST /simulate/burst</code> para inyectar 100 datos de golpe.<br>
+    3. <strong>Swagger</strong>: Documenta los ejemplos de Pydantic para que al pulsar 'Try it out' los campos ya tengan valores de muestra creíbles.
+  </p>
+  <details style="margin-top:12px"><summary style="cursor:pointer;color:var(--orange);font-size:14px;font-weight:600">💡 Pista de Implementación</summary><p style="margin-top:8px;font-size:14px;color:var(--text-secondary)">Usa <code>random.gauss(21.0, 4.0)</code> para que las temperaturas sigan una distribución normal realista en vez de un simple número plano aleatorio.</p></details>
+</div>
+</section>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+
+<script>
+  Reveal.initialize({
+    hash: true,
+    transition: 'fade',
+    slideNumber: 'c/t',
+    center: false,
+    margin: 0.1,
+    width: 1200,
+    height: 800,
+    minScale: 0.2,
+    maxScale: 1.0,
+    plugins: []
+  });
+
+  function copyCode(btn) {
+    var block = btn.closest('.code-block');
+    var pre = block && block.querySelector('pre');
+    if (!pre) return;
+    navigator.clipboard.writeText(pre.innerText).then(function () {
+      btn.textContent = 'Copiado';
+      setTimeout(function () { btn.textContent = 'Copiar'; }, 2000);
+    });
+  }
+
+  function quizCheck(btn) {
+    var li = btn.parentElement;
+    var correct = btn.dataset.correct === 'true';
+    li.style.background = correct ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+    btn.style.color = correct ? '#10b981' : '#ef4444';
+    btn.style.borderColor = correct ? '#10b981' : '#ef4444';
+    var q = btn.closest('.quiz-question');
+    var expl = q && q.querySelector('.quiz-explanation');
+    if (expl) expl.style.display = 'block';
+  }
+</script>
+</body>
+</html>

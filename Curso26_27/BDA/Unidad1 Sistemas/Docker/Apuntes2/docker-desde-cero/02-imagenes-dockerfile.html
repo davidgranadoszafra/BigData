@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker desde cero - Construir tu propia imagen con un Dockerfile</title>
+    <link rel="stylesheet" href="../shared/styles.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script>!function(){var t=localStorage.getItem('lucentia-theme')||'dark';'light'===t&&document.documentElement.setAttribute('data-theme','light')}()</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Abrir menú" aria-expanded="true">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <header class="page-hero">
+        <span class="page-hero-icon">02</span>
+        <h1>Construir tu propia imagen con un Dockerfile</h1>
+        <p>Hasta ahora has usado imagenes de otros (nginx, ubuntu, hello-world). Ahora construyes la tuya, con tu propio codigo dentro.</p>
+    </header>
+
+    <div class="content">
+        <h2>1. Una imagen es un monton de capas apiladas</h2>
+        <p>
+            Cada instruccion de un Dockerfile crea una <strong>capa</strong> nueva encima de la anterior — como un mapa de capas en un editor de imagen. Docker guarda cada capa por separado y la reutiliza si no ha cambiado, en vez de reconstruirla de cero. Esto tiene una consecuencia practica muy real que veras en la seccion 4: <strong>el orden de las instrucciones en el Dockerfile importa para la velocidad de build</strong>, no solo por estetica.
+        </p>
+
+        <h2>2. Un Dockerfile minimo, real, explicado linea a linea</h2>
+        <p>Imagina una app Python muy simple: <code>app.py</code> que imprime un saludo. Este es el Dockerfile completo para empaquetarla:</p>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">dockerfile - Dockerfile minimo</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]</code></pre>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <h5><code>FROM python:3.12-slim</code></h5>
+                    <p>La imagen base sobre la que se construye todo. <code>slim</code> es una variante reducida de la imagen oficial de Python — menos megas, menos superficie de ataque.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <h5><code>WORKDIR /app</code></h5>
+                    <p>Crea (si no existe) y se mueve a <code>/app</code> dentro de la imagen. Todo lo que venga despues (<code>COPY</code>, <code>RUN</code>, <code>CMD</code>) se ejecuta desde ahi.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <h5><code>COPY requirements.txt .</code> + <code>RUN pip install ...</code></h5>
+                    <p>Copia SOLO el fichero de dependencias primero, e instala. Por que no todo el codigo de golpe: lo explica la seccion 4.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <h5><code>COPY . .</code></h5>
+                    <p>Ahora si, copia el resto del codigo (todo lo que hay en la carpeta actual del host) a <code>/app</code> dentro de la imagen.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-body">
+                    <h5><code>CMD ["python", "app.py"]</code></h5>
+                    <p>El comando que se ejecuta cuando arranca un contenedor de esta imagen — no cuando se construye la imagen, sino cada vez que haces <code>docker run</code>.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2>3. Construir y ejecutar tu imagen</h2>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Build y run</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker build -t mi-app:1.0 .
+docker run mi-app:1.0</code></pre>
+        </div>
+        <p>
+            <code>-t mi-app:1.0</code> le pone nombre y version a la imagen (el "tag") — sin esto, tendrias que referirte a ella por un identificador largo y feo. El <code>.</code> al final le dice a Docker "el contexto de build (donde buscar el Dockerfile y los ficheros a copiar) es esta carpeta".
+        </p>
+
+        <h2>4. Por que el orden importa — la cache de build en accion</h2>
+        <p>
+            Vuelve al Dockerfile de la seccion 2. <code>requirements.txt</code> se copia e instala ANTES que el resto del codigo, a proposito. Compara los dos escenarios:
+        </p>
+        <div class="two-col">
+            <div class="mini-card">
+                <h5>Cambias solo <code>app.py</code></h5>
+                <p>La capa de <code>COPY requirements.txt .</code> y <code>RUN pip install</code> no cambio — Docker reutiliza esa capa de la cache, sin reinstalar nada. El build tarda segundos.</p>
+            </div>
+            <div class="mini-card">
+                <h5>Si hubieras puesto <code>COPY . .</code> primero</h5>
+                <p>Cualquier cambio en cualquier fichero de codigo invalida esa capa — y todo lo que venga despues, incluida la instalacion de dependencias, se repite desde cero cada vez. El build tarda minutos, siempre.</p>
+            </div>
+        </div>
+        <div class="info-box info">
+            <span class="info-box-icon">INFO</span>
+            <div class="info-box-text">
+                <strong>Regla practica:</strong> pon primero en el Dockerfile lo que cambia poco (dependencias) y al final lo que cambia mucho (tu propio codigo). Docker invalida la cache desde la primera capa que cambio hacia abajo — nunca al reves.
+            </div>
+        </div>
+
+        <h2>5. Que deberia quedarte claro al cerrar este capitulo</h2>
+        <ul>
+            <li>Un Dockerfile es una lista de instrucciones, cada una crea una capa reutilizable.</li>
+            <li><code>docker build -t nombre:version .</code> construye; <code>docker run nombre:version</code> ejecuta.</li>
+            <li>El orden de las instrucciones no es cosmetico: dependencias antes que codigo propio, siempre que puedas.</li>
+        </ul>
+        <p><strong>Siguiente capitulo:</strong> <a href="03-gestion-contenedores.html">3. Gestionar contenedores: logs, exec, variables de entorno</a>.</p>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="brand-logo">LucentIA</div>
+                <p>De usar imagenes de otros a construir la tuya propia.</p>
+            </div>
+            <div class="footer-links">
+                <h5>Continuar</h5>
+                <ul>
+                    <li><a href="03-gestion-contenedores.html">3. Gestionar contenedores</a></li>
+                    <li><a href="04-volumenes.html">4. Volumenes</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">FROM, WORKDIR, COPY, RUN, CMD -- y por que el orden importa para la cache.</div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const code = button.closest('.code-block').querySelector('pre code').innerText;
+            navigator.clipboard.writeText(code);
+            button.textContent = 'Copiado';
+            setTimeout(() => { button.textContent = 'Copiar'; }, 1500);
+        }
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 12);
+        });
+    </script>
+<script src="../shared/lucentia.js" defer></script>
+
+<!-- ── Sidebar inyectada por inject_gen1_sidebar.py ────────────────────────── -->
+<nav id="sidebar" class="sidebar">
+  <div class="sidebar-logo">LucentIA</div>
+  <div class="sidebar-course">Docker desde cero - Indice</div>
+  <ul class="sidebar-nav">
+    <li class="sidebar-section">Índice del curso</li>
+    <li><a href="00-fundamentos.html">Docker desde cero - Que es Docker</a></li>
+    <li><a href="01-primer-contenedor.html">Docker desde cero - Primer contenedor</a></li>
+    <li><a href="02-imagenes-dockerfile.html">Docker desde cero - Imagenes y Dockerfile</a></li>
+    <li><a href="03-gestion-contenedores.html">Docker desde cero - Gestionar contenedores</a></li>
+    <li><a href="04-volumenes.html">Docker desde cero - Volumenes</a></li>
+    <li><a href="05-redes.html">Docker desde cero - Redes</a></li>
+    <li><a href="06-compose-basico.html">Docker desde cero - Compose basico</a></li>
+    <li><a href="07-compose-avanzado.html">Docker desde cero - Compose avanzado</a></li>
+    <li><a href="08-buenas-practicas.html">Docker desde cero - Buenas practicas</a></li>
+    <li><a href="index.html">Docker desde cero - Indice</a></li>
+  </ul>
+  <div class="theme-toggle">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+      <span id="themeIcon">&#9728;</span>
+      <span id="themeLabel">Modo claro</span>
+    </button>
+  </div>
+</nav>
+
+</body>
+</html>

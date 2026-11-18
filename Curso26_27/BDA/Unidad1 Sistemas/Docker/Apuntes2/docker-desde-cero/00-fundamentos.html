@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker desde cero - Que es Docker y por que existe</title>
+    <link rel="stylesheet" href="../shared/styles.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script>!function(){var t=localStorage.getItem('lucentia-theme')||'dark';'light'===t&&document.documentElement.setAttribute('data-theme','light')}()</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Abrir menú" aria-expanded="true">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <header class="page-hero">
+        <span class="page-hero-icon">00</span>
+        <h1>Que es Docker y por que existe</h1>
+        <p>Antes de instalar nada: que problema resuelve Docker de verdad, que es un contenedor, que es una imagen, y por que estas dos palabras no son lo mismo aunque se usen mezcladas todo el rato.</p>
+    </header>
+
+    <div class="content">
+        <h2>1. El problema que Docker resuelve</h2>
+        <p>
+            Imagina que escribes una aplicacion que necesita Python 3.11, una version concreta de una libreria, y una base de datos PostgreSQL 15 arrancada. Funciona perfecto en tu ordenador. Se la pasas a un companero, y no le arranca: el tiene Python 3.9, otra version de la libreria, y ni siquiera tiene PostgreSQL instalado.
+            Ese problema tiene nombre entre programadores: <strong>"en mi maquina funciona"</strong>. No es una excusa — es un sintoma real de que el entorno donde corre el codigo no esta descrito en ningun sitio, solo vive a mano en tu ordenador.
+        </p>
+        <div class="two-col">
+            <div class="mini-card">
+                <h5>Sin Docker</h5>
+                <ul>
+                    <li>Cada maquina tiene su propia mezcla de versiones instaladas a mano.</li>
+                    <li>Instalar el proyecto en una maquina nueva significa seguir una lista de pasos (a veces desactualizada) y rezar.</li>
+                    <li>"Funciona en mi maquina" no es una solucion, es un chiste que esconde horas perdidas.</li>
+                </ul>
+            </div>
+            <div class="mini-card">
+                <h5>Con Docker</h5>
+                <ul>
+                    <li>El entorno completo (sistema operativo base, dependencias, version exacta de cada cosa) queda descrito en un fichero de texto.</li>
+                    <li>Ese fichero se ejecuta igual en tu maquina, en la de tu companero, o en un servidor en la nube.</li>
+                    <li>"Funciona en mi maquina" deja de ser relevante porque todos corren literalmente el mismo entorno empaquetado.</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>2. Contenedor no es lo mismo que maquina virtual</h2>
+        <p>
+            Es la confusion mas comun al empezar. Una maquina virtual (VM) simula un ordenador entero, con su propio sistema operativo completo por dentro — pesa gigas, tarda minutos en arrancar. Un contenedor es mucho mas ligero: <strong>comparte el kernel del sistema operativo del host</strong> y solo aisla los procesos, los ficheros y la red de la aplicacion. Por eso un contenedor pesa megas, no gigas, y arranca en menos de un segundo en vez de minutos.
+        </p>
+        <div class="concept-grid">
+            <div class="concept-card cyan">
+                <span class="concept-icon">VM</span>
+                <h3>Maquina virtual</h3>
+                <p>Simula hardware completo + un sistema operativo entero por dentro. Aislamiento total, pero pesado y lento de arrancar.</p>
+            </div>
+            <div class="concept-card orange">
+                <span class="concept-icon">DOC</span>
+                <h3>Contenedor Docker</h3>
+                <p>Comparte el kernel del host, aisla solo procesos y ficheros. Ligero, arranca en milisegundos, pero no es aislamiento a nivel de hardware.</p>
+            </div>
+        </div>
+        <div class="info-box info">
+            <span class="info-box-icon">INFO</span>
+            <div class="info-box-text">
+                <strong>Por eso Docker solo existe de verdad en Linux</strong> (comparte el kernel Linux). En Mac y Windows, Docker Desktop arranca una pequena maquina virtual Linux por debajo, sin que lo notes, para poder compartir kernel con los contenedores. Es un detalle que rara vez importa dia a dia, pero explica por que algunos comportamientos (rutas de fichero, rendimiento de volumenes) son ligeramente distintos entre Linux nativo y Mac/Windows.
+            </div>
+        </div>
+
+        <h2>3. Imagen y contenedor no son la misma palabra</h2>
+        <p>
+            Esta es la segunda confusion mas comun, y vale la pena fijarla con una analogia concreta antes de seguir.
+        </p>
+        <div class="two-col">
+            <div class="mini-card">
+                <h5>Imagen</h5>
+                <p>Es la <strong>receta empaquetada</strong>: un fichero (en realidad varias capas apiladas) que describe que sistema base usar, que instalar, que ficheros copiar y que comando ejecutar al final. No esta "corriendo" — es una plantilla estatica, guardada en disco.</p>
+            </div>
+            <div class="mini-card">
+                <h5>Contenedor</h5>
+                <p>Es <strong>una imagen puesta en marcha</strong>: un proceso real corriendo, con su propio sistema de ficheros aislado (basado en la imagen) y su propia red. De la misma imagen puedes arrancar cero, uno o cien contenedores distintos, todos independientes entre si.</p>
+            </div>
+        </div>
+        <p>
+            Dicho de otra forma: la imagen es la clase, el contenedor es el objeto instanciado. O, si prefieres cocina: la imagen es la receta escrita, el contenedor es el plato ya cocinado y servido — puedes cocinar el mismo plato (imagen) tantas veces como quieras (contenedores), y cada uno es independiente aunque venga de la misma receta.
+        </p>
+
+        <h2>4. Tu primer contenedor de verdad, y que hace cada palabra del comando</h2>
+        <p>Antes de explicar mas teoria, ejecuta esto. Es el "hola mundo" oficial de Docker.</p>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Primer contenedor</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker run hello-world</code></pre>
+        </div>
+        <p>Lo que ocurre por dentro, paso a paso:</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <h5>Docker busca la imagen <code>hello-world</code> en tu maquina</h5>
+                    <p>La primera vez no esta — no la has descargado nunca.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <h5>Como no la encuentra local, la descarga de Docker Hub</h5>
+                    <p>Docker Hub es un registro publico de imagenes en internet — como un GitHub, pero de imagenes en vez de codigo. Veras la linea <code>Unable to find image 'hello-world:latest' locally</code> seguida de la descarga.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <h5>Docker crea un contenedor nuevo a partir de esa imagen y lo arranca</h5>
+                    <p>El proceso dentro del contenedor imprime un mensaje explicando lo que acaba de pasar, y termina.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <h5>El contenedor termina y queda parado (no se borra solo)</h5>
+                    <p>Si ejecutas <code>docker ps -a</code> (el <code>-a</code> es importante — sin el solo ves los que siguen corriendo) lo veras ahi, con estado <code>Exited</code>.</p>
+                </div>
+            </div>
+        </div>
+        <p>Repite el comando una segunda vez y compara: ya no aparece la linea de descarga, porque la imagen ya esta en tu maquina — solo se crea y arranca un contenedor nuevo, al instante.</p>
+
+        <h2>5. Un detalle que te va a sonar raro luego: cliente y daemon</h2>
+        <p>
+            Cuando escribes <code>docker run ...</code>, esa orden en realidad viaja a un proceso de fondo llamado <strong>daemon</strong>, que es quien hace el trabajo real. Lo que tecleas es solo el <strong>cliente</strong>, un mensajero. No necesitas hacer nada distinto por esto — sigue escribiendo <code>docker run</code> igual — pero cuando mas adelante veas la palabra <code>dockerd</code> en un log de error, ya sabras que es el nombre de ese proceso de fondo, no un typo.
+        </p>
+
+        <h2>6. Vocabulario minimo para el resto del curso</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Palabra</th>
+                        <th>Que es</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Imagen</strong></td>
+                        <td>Plantilla estatica en disco: sistema base + dependencias + ficheros + comando por defecto.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Contenedor</strong></td>
+                        <td>Una imagen puesta en marcha: un proceso real, aislado, corriendo ahora mismo (o parado tras terminar).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dockerfile</strong></td>
+                        <td>El fichero de texto donde describes como se construye una imagen, paso a paso.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Registro (registry)</strong></td>
+                        <td>Un almacen de imagenes al que hacer <code>push</code>/<code>pull</code>. Docker Hub es el publico y gratuito por defecto.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Daemon (<code>dockerd</code>)</strong></td>
+                        <td>El proceso de fondo que gestiona todo de verdad. El comando <code>docker</code> es solo el cliente que le habla.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Docker Hub</strong></td>
+                        <td>El registro publico oficial — de ahi sale <code>hello-world</code>, <code>python</code>, <code>mariadb</code> y miles de imagenes mas.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>7. Idea central del capitulo</h2>
+        <ul>
+            <li>Docker no virtualiza un ordenador entero — aisla procesos compartiendo el kernel del host, por eso es ligero y rapido.</li>
+            <li>Imagen = plantilla estatica. Contenedor = esa plantilla puesta en marcha. No son sinonimos.</li>
+            <li>Tu nunca hablas directamente con los contenedores: el cliente <code>docker</code> siempre pasa por el daemon.</li>
+            <li>A partir de aqui, cada capitulo profundiza en una pieza: instalar y correr contenedores de verdad, construir tus propias imagenes, guardar datos, conectar contenedores entre si, y orquestar varios a la vez con Compose.</li>
+        </ul>
+        <p><strong>Siguiente capitulo:</strong> <a href="01-primer-contenedor.html">1. Instalacion y tu primer contenedor de verdad</a>.</p>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="brand-logo">LucentIA</div>
+                <p>Capitulo 0: los conceptos minimos antes de instalar nada.</p>
+            </div>
+            <div class="footer-links">
+                <h5>Continuar</h5>
+                <ul>
+                    <li><a href="01-primer-contenedor.html">1. Primer contenedor</a></li>
+                    <li><a href="02-imagenes-dockerfile.html">2. Imagenes y Dockerfile</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">Imagen, contenedor, Dockerfile, daemon, registro — el resto del curso usa estas palabras sin volver a definirlas.</div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const code = button.closest('.code-block').querySelector('pre code').innerText;
+            navigator.clipboard.writeText(code);
+            button.textContent = 'Copiado';
+            setTimeout(() => { button.textContent = 'Copiar'; }, 1500);
+        }
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 12);
+        });
+    </script>
+<script src="../shared/lucentia.js" defer></script>
+
+<!-- ── Sidebar inyectada por inject_gen1_sidebar.py ────────────────────────── -->
+<nav id="sidebar" class="sidebar">
+  <div class="sidebar-logo">LucentIA</div>
+  <div class="sidebar-course">Docker desde cero - Indice</div>
+  <ul class="sidebar-nav">
+    <li class="sidebar-section">Índice del curso</li>
+    <li><a href="00-fundamentos.html">Docker desde cero - Que es Docker</a></li>
+    <li><a href="01-primer-contenedor.html">Docker desde cero - Primer contenedor</a></li>
+    <li><a href="02-imagenes-dockerfile.html">Docker desde cero - Imagenes y Dockerfile</a></li>
+    <li><a href="03-gestion-contenedores.html">Docker desde cero - Gestionar contenedores</a></li>
+    <li><a href="04-volumenes.html">Docker desde cero - Volumenes</a></li>
+    <li><a href="05-redes.html">Docker desde cero - Redes</a></li>
+    <li><a href="06-compose-basico.html">Docker desde cero - Compose basico</a></li>
+    <li><a href="07-compose-avanzado.html">Docker desde cero - Compose avanzado</a></li>
+    <li><a href="08-buenas-practicas.html">Docker desde cero - Buenas practicas</a></li>
+    <li><a href="index.html">Docker desde cero - Indice</a></li>
+  </ul>
+  <div class="theme-toggle">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+      <span id="themeIcon">&#9728;</span>
+      <span id="themeLabel">Modo claro</span>
+    </button>
+  </div>
+</nav>
+
+</body>
+</html>

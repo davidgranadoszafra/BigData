@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker desde cero - Buenas practicas: imagenes mas pequenas y mas seguras</title>
+    <link rel="stylesheet" href="../shared/styles.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script>!function(){var t=localStorage.getItem('lucentia-theme')||'dark';'light'===t&&document.documentElement.setAttribute('data-theme','light')}()</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Abrir menú" aria-expanded="true">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <header class="page-hero">
+        <span class="page-hero-icon">08</span>
+        <h1>Buenas practicas: imagenes mas pequenas y mas seguras</h1>
+        <p>Ultimo capitulo. Todo lo anterior ya te hace funcional con Docker. Esto es lo que separa "funciona" de "funciona bien".</p>
+    </header>
+
+    <div class="content">
+        <h2>1. Multi-stage build: no cargues con lo que solo hizo falta para construir</h2>
+        <p>
+            Para compilar o instalar dependencias a veces necesitas herramientas (compiladores, paquetes de desarrollo) que la aplicacion YA COMPILADA no necesita para ejecutarse. Un multi-stage build usa una imagen para construir, y copia solo el resultado final a una imagen limpia:
+        </p>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">dockerfile - Multi-stage build</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code># Etapa 1: build -- aqui SI hacen falta herramientas pesadas
+FROM python:3.12 AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Etapa 2: runtime -- imagen final, limpia
+FROM python:3.12-slim
+WORKDIR /app
+COPY --from=builder /root/.local /root/.local
+COPY . .
+ENV PATH=/root/.local/bin:$PATH
+CMD ["python", "app.py"]</code></pre>
+        </div>
+        <p>
+            La imagen final (<code>FROM python:3.12-slim</code> en la etapa 2) nunca tuvo el compilador completo de la etapa 1 — solo recibio, con <code>COPY --from=builder</code>, el resultado ya instalado. Menos peso, menos superficie de ataque, mismo resultado funcional.
+        </p>
+
+        <h2>2. .dockerignore: no copies lo que no hace falta</h2>
+        <p>Igual que <code>.gitignore</code>, pero para el build. Sin el, <code>COPY . .</code> copia TODO lo que hay en la carpeta — incluida tu carpeta local de dependencias, tu historial de git, tus ficheros de configuracion del editor.</p>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">text - .dockerignore</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>.git
+.venv
+__pycache__
+*.pyc
+.env
+node_modules</code></pre>
+        </div>
+
+        <h2>3. Limpieza: Docker acumula basura si no la vacias</h2>
+        <p>Imagenes intermedias, contenedores parados y viejos, redes sin usar — se van acumulando y ocupando disco.</p>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Limpieza</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker system df       # cuanto espacio ocupa cada cosa, primero mira esto
+docker system prune    # borra lo que ya no esta en uso (pide confirmacion)</code></pre>
+        </div>
+
+        <h2>4. Tres habitos de seguridad basicos, sin complicarse</h2>
+        <div class="two-col">
+            <div class="mini-card">
+                <h5>No corras como root dentro del contenedor</h5>
+                <p>Muchas imagenes oficiales ya definen un usuario sin privilegios — usalo (<code>USER appuser</code> en el Dockerfile) en vez de dejar el root por defecto.</p>
+            </div>
+            <div class="mini-card">
+                <h5>No uses <code>:latest</code> en produccion</h5>
+                <p><code>latest</code> cambia de contenido con el tiempo sin avisar. Fija una version concreta (<code>python:3.12.4-slim</code>) para que el mismo Dockerfile construya siempre lo mismo.</p>
+            </div>
+        </div>
+
+        <h2>5. Repaso del curso completo</h2>
+        <ul>
+            <li><strong>Capitulo 0-1:</strong> imagen vs contenedor, y los comandos basicos del dia a dia.</li>
+            <li><strong>Capitulo 2:</strong> construir tu propia imagen con un Dockerfile, y por que el orden de las capas importa.</li>
+            <li><strong>Capitulo 3:</strong> operar un contenedor vivo — logs, exec, variables de entorno.</li>
+            <li><strong>Capitulo 4-5:</strong> sacar los datos fuera del contenedor (volumenes) y conectar varios contenedores entre si (redes).</li>
+            <li><strong>Capitulo 6-7:</strong> declarar todo eso en un solo fichero con Compose, y hacerlo robusto de verdad con healthchecks.</li>
+            <li><strong>Este capitulo:</strong> imagenes mas pequenas, mas limpias y algo mas seguras.</li>
+        </ul>
+        <p>De aqui en adelante, la mejor forma de aprender mas es toparte con un problema real y resolverlo — ese es exactamente el enfoque del laboratorio integrador, donde Docker, Gitea y Jenkins trabajan juntos de verdad.</p>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="brand-logo">LucentIA</div>
+                <p>Multi-stage builds, .dockerignore, limpieza y tres habitos de seguridad basicos.</p>
+            </div>
+            <div class="footer-links">
+                <h5>Repasar</h5>
+                <ul>
+                    <li><a href="index.html">Indice del curso</a></li>
+                    <li><a href="00-fundamentos.html">0. Que es Docker</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">Multi-stage builds, .dockerignore, docker system prune, usuario sin privilegios, versiones fijas.</div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const code = button.closest('.code-block').querySelector('pre code').innerText;
+            navigator.clipboard.writeText(code);
+            button.textContent = 'Copiado';
+            setTimeout(() => { button.textContent = 'Copiar'; }, 1500);
+        }
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 12);
+        });
+    </script>
+<script src="../shared/lucentia.js" defer></script>
+
+<!-- ── Sidebar inyectada por inject_gen1_sidebar.py ────────────────────────── -->
+<nav id="sidebar" class="sidebar">
+  <div class="sidebar-logo">LucentIA</div>
+  <div class="sidebar-course">Docker desde cero - Indice</div>
+  <ul class="sidebar-nav">
+    <li class="sidebar-section">Índice del curso</li>
+    <li><a href="00-fundamentos.html">Docker desde cero - Que es Docker</a></li>
+    <li><a href="01-primer-contenedor.html">Docker desde cero - Primer contenedor</a></li>
+    <li><a href="02-imagenes-dockerfile.html">Docker desde cero - Imagenes y Dockerfile</a></li>
+    <li><a href="03-gestion-contenedores.html">Docker desde cero - Gestionar contenedores</a></li>
+    <li><a href="04-volumenes.html">Docker desde cero - Volumenes</a></li>
+    <li><a href="05-redes.html">Docker desde cero - Redes</a></li>
+    <li><a href="06-compose-basico.html">Docker desde cero - Compose basico</a></li>
+    <li><a href="07-compose-avanzado.html">Docker desde cero - Compose avanzado</a></li>
+    <li><a href="08-buenas-practicas.html">Docker desde cero - Buenas practicas</a></li>
+    <li><a href="index.html">Docker desde cero - Indice</a></li>
+  </ul>
+  <div class="theme-toggle">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+      <span id="themeIcon">&#9728;</span>
+      <span id="themeLabel">Modo claro</span>
+    </button>
+  </div>
+</nav>
+
+</body>
+</html>

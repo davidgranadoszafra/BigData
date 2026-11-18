@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker desde cero - Instalacion y primer contenedor de verdad</title>
+    <link rel="stylesheet" href="../shared/styles.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script>!function(){var t=localStorage.getItem('lucentia-theme')||'dark';'light'===t&&document.documentElement.setAttribute('data-theme','light')}()</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Abrir menú" aria-expanded="true">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <header class="page-hero">
+        <span class="page-hero-icon">01</span>
+        <h1>Instalacion y primer contenedor de verdad</h1>
+        <p>Ya sabes que es una imagen y que es un contenedor (capitulo 0). Ahora los comandos que vas a usar todos los dias: run, ps, images, stop, rm.</p>
+    </header>
+
+    <div class="content">
+        <h2>1. Instalar Docker</h2>
+        <p>
+            En Mac y Windows, instala <strong>Docker Desktop</strong> desde <code>docker.com</code> — incluye el cliente, el daemon (dentro de una VM Linux ligera, invisible para ti) y una interfaz grafica opcional. En Linux, se instala el paquete <code>docker.io</code> o el repositorio oficial de Docker directamente, sin VM intermedia, porque el kernel ya es Linux.
+        </p>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Comprobar que esta instalado y arrancado</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker --version
+docker info</code></pre>
+        </div>
+        <p><code>docker --version</code> solo comprueba el cliente. <code>docker info</code> pregunta al daemon — si esta apagado, este segundo comando falla con un error de conexion. Es la primera comprobacion que hacer cuando algo "no funciona".</p>
+
+        <h2>2. Los tres comandos que mas vas a usar</h2>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - El trio basico</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker images          # que imagenes tengo descargadas
+docker ps              # que contenedores estan corriendo AHORA
+docker ps -a           # todos los contenedores, incluidos los parados</code></pre>
+        </div>
+        <p>El fallo tipico de quien empieza: ejecutar algo, no verlo en <code>docker ps</code>, y pensar que ha fallado — cuando en realidad ya termino y esta parado. Por eso <code>docker ps -a</code> es el que de verdad cuenta la historia completa.</p>
+
+        <h2>3. Modo interactivo vs modo en segundo plano</h2>
+        <p>Prueba estos dos comandos y compara la diferencia real, no solo la teoria:</p>
+        <div class="two-col">
+            <div class="mini-card">
+                <h5>Interactivo (<code>-it</code>)</h5>
+                <pre><code>docker run -it ubuntu bash</code></pre>
+                <p>Te deja una terminal DENTRO del contenedor. Tu terminal normal queda "ocupada" hasta que escribas <code>exit</code>. Util para explorar o depurar.</p>
+            </div>
+            <div class="mini-card">
+                <h5>Segundo plano (<code>-d</code>)</h5>
+                <pre><code>docker run -d nginx</code></pre>
+                <p>El contenedor arranca y tu terminal queda libre al instante. Es como usaras Docker casi siempre para servicios reales (una web, una base de datos).</p>
+            </div>
+        </div>
+
+        <h2>4. Nombrar, parar y borrar contenedores</h2>
+        <p>Sin darle nombre, Docker le pone uno aleatorio (algo como <code>relaxed_turing</code>). Dale tu un nombre para no tener que buscarlo:</p>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Ciclo de vida con nombre propio</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker run -d --name mi_nginx nginx
+docker stop mi_nginx      # lo para, pero sigue existiendo (docker ps -a lo ve)
+docker start mi_nginx     # lo vuelve a arrancar
+docker rm mi_nginx        # lo borra de verdad -- tiene que estar parado antes
+docker rm -f mi_nginx     # lo para Y lo borra en un solo paso</code></pre>
+        </div>
+
+        <h2>5. Publicar un puerto — para poder abrirlo en el navegador</h2>
+        <p>
+            Un contenedor tiene su propia red aislada por defecto. Si dentro corre un servidor web escuchando en el puerto 80, ese 80 <strong>no existe para tu navegador</strong> hasta que lo publicas explicitamente con <code>-p</code>.
+        </p>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">bash - Publicar un puerto</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>docker run -d --name web -p 8080:80 nginx</code></pre>
+        </div>
+        <p>
+            <code>-p 8080:80</code> se lee de derecha a izquierda: "el puerto 80 de DENTRO del contenedor, publicalo como el puerto 8080 de tu maquina". Abre <code>http://localhost:8080</code> y veras la pagina de bienvenida de nginx — sirviendose desde dentro del contenedor.
+        </p>
+        <div class="info-box warning">
+            <span class="info-box-icon">WARN</span>
+            <div class="info-box-text">
+                <strong>Error tipico:</strong> arrancar sin <code>-p</code>, ver que el contenedor esta "corriendo" en <code>docker ps</code>, y no entender por que <code>localhost</code> no responde. El contenedor esta bien — simplemente nadie le abrio la puerta hacia fuera. Compara siempre lo que dice <code>docker ps</code> en la columna <code>PORTS</code>: si esta vacia, no hay nada publicado.
+            </div>
+        </div>
+
+        <h2>6. Que deberia quedarte claro al cerrar este capitulo</h2>
+        <ul>
+            <li><code>docker ps -a</code> cuenta la verdad completa; <code>docker ps</code> solo. lo que esta vivo ahora.</li>
+            <li><code>-d</code> para servicios que se quedan corriendo, <code>-it</code> para entrar y toquetear.</li>
+            <li>Sin <code>-p</code>, lo que corre dentro del contenedor es invisible desde fuera, aunque el contenedor este perfectamente sano.</li>
+        </ul>
+        <p><strong>Siguiente capitulo:</strong> <a href="02-imagenes-dockerfile.html">2. Construir tu propia imagen con un Dockerfile</a>.</p>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="brand-logo">LucentIA</div>
+                <p>Capitulo orientado a los comandos que se usan cada dia, no a memorizar flags.</p>
+            </div>
+            <div class="footer-links">
+                <h5>Continuar</h5>
+                <ul>
+                    <li><a href="02-imagenes-dockerfile.html">2. Imagenes y Dockerfile</a></li>
+                    <li><a href="03-gestion-contenedores.html">3. Gestionar contenedores</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">docker run, docker ps -a, docker stop/rm, -p para publicar puertos.</div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const code = button.closest('.code-block').querySelector('pre code').innerText;
+            navigator.clipboard.writeText(code);
+            button.textContent = 'Copiado';
+            setTimeout(() => { button.textContent = 'Copiar'; }, 1500);
+        }
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 12);
+        });
+    </script>
+<script src="../shared/lucentia.js" defer></script>
+
+<!-- ── Sidebar inyectada por inject_gen1_sidebar.py ────────────────────────── -->
+<nav id="sidebar" class="sidebar">
+  <div class="sidebar-logo">LucentIA</div>
+  <div class="sidebar-course">Docker desde cero - Indice</div>
+  <ul class="sidebar-nav">
+    <li class="sidebar-section">Índice del curso</li>
+    <li><a href="00-fundamentos.html">Docker desde cero - Que es Docker</a></li>
+    <li><a href="01-primer-contenedor.html">Docker desde cero - Primer contenedor</a></li>
+    <li><a href="02-imagenes-dockerfile.html">Docker desde cero - Imagenes y Dockerfile</a></li>
+    <li><a href="03-gestion-contenedores.html">Docker desde cero - Gestionar contenedores</a></li>
+    <li><a href="04-volumenes.html">Docker desde cero - Volumenes</a></li>
+    <li><a href="05-redes.html">Docker desde cero - Redes</a></li>
+    <li><a href="06-compose-basico.html">Docker desde cero - Compose basico</a></li>
+    <li><a href="07-compose-avanzado.html">Docker desde cero - Compose avanzado</a></li>
+    <li><a href="08-buenas-practicas.html">Docker desde cero - Buenas practicas</a></li>
+    <li><a href="index.html">Docker desde cero - Indice</a></li>
+  </ul>
+  <div class="theme-toggle">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+      <span id="themeIcon">&#9728;</span>
+      <span id="themeLabel">Modo claro</span>
+    </button>
+  </div>
+</nav>
+
+</body>
+</html>
